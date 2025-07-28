@@ -33,7 +33,7 @@ def feature_extraction(model: nn.Module,
         train_dir, test_dir, weights, batch_size, num_workers
     )
 
-    model = model(weights).to(device)
+    model = model(weights=weights).to(device)
     crop_size = weights.transforms().crop_size[0]
     original_classifier = model.classifier
     dropout_layer = original_classifier[0]
@@ -50,17 +50,20 @@ def feature_extraction(model: nn.Module,
         nn.Linear(in_features= model.classifier[1].in_features, out_features= len(class_names)),
     )
 
-    summary(
+    dummy_test = summary(
         model, 
-        input_size= (1, len(class_names), crop_size, crop_size),
+        input_size= (1, 3, crop_size, crop_size),
         col_names= ['input_size', 'output_size', 'num_params', 'trainable'],
         col_width= 20,
         row_settings=['var_names']
     )
 
+    dummy_test
+
     loss_fn = loss_fn
     train_accuracy = accuracy.to(device)
     test_accuracy = accuracy.to(device)
+    optimizer_fn = optimizer
 
     best_loss = float('inf')
 
@@ -75,7 +78,7 @@ def feature_extraction(model: nn.Module,
         print(f'\n[INFO] Epoch: {epoch + 1}/{epochs}\n')
         
         train_loss, train_acc = train_loop.train_loop(
-            model, train_dataloader, loss_fn, optimizer, train_accuracy, device
+            model, train_dataloader, loss_fn, optimizer_fn, train_accuracy, device
         )
 
         test_loss, test_acc = train_loop.test_loop(

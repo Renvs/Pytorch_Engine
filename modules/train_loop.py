@@ -44,20 +44,20 @@ def test_loop( model: nn.Module,
                device: str = device 
 ):
     model.to(device)
-    model.train()
+    model.eval()
 
     test_loss, test_acc = 0, 0
-
-    for x, y in tqdm(test_data):
-        x, y = x.to(device), y.to(device)
-        pred = model(x)
-        loss = loss_fn(pred, y)
-        test_loss += loss.item()
-        accuracy.update(pred, y)
+    with torch.inference_mode():
+        for x, y in tqdm(test_data):
+            x, y = x.to(device), y.to(device)
+            pred = model(x)
+            loss = loss_fn(pred, y)
+            test_loss += loss.item()
+            accuracy.update(pred, y)
     
-    test_loss /= len(test_data)
-    test_acc = accuracy.compute()
-    accuracy.reset()
-    print(f"Test loss: {test_loss:.4f} | Test accuracy: {test_acc * 100:.3f}%")
+        test_loss /= len(test_data)
+        test_acc = accuracy.compute()
+        accuracy.reset()
+        print(f"Test loss: {test_loss:.4f} | Test accuracy: {test_acc * 100:.3f}%")
 
     return test_loss, test_acc
