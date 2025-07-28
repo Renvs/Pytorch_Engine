@@ -34,7 +34,7 @@ def feature_extraction(model: nn.Module,
     )
 
     model = model(weights).to(device)
-    resize_layer = weights.transforms()[1]
+    crop_size = weights.transforms().crop_size[0]
     original_classifier = weight.classifier
     dropout_layer = original_classifier[0]
     dropout_p = dropout_layer.p
@@ -52,7 +52,7 @@ def feature_extraction(model: nn.Module,
 
     summary(
         model, 
-        input_size= (1, 3, resize_layer, resize_layer),
+        input_size= (1, 3, crop_size, crop_size),
         col_names= ['input_size', 'output_size', 'num_params', 'trainable'],
         col_width= 20,
         row_settings=['varnames']
