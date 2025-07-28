@@ -72,7 +72,7 @@ def feature_extraction(model: nn.Module,
     }
     
     for epoch in range(epochs):
-        print(f'[INFO] Epoch: {epoch + 1}/{epochs}')
+        print(f'\n[INFO] Epoch: {epoch + 1}/{epochs}\n')
         
         train_loss, train_acc = train_loop.train_loop(
             model, train_dataloader, loss_fn, optimizer, train_accuracy, device
@@ -97,10 +97,10 @@ def feature_extraction(model: nn.Module,
         for key, value in current_result.items():
             result[key].append(value)
 
-        print(f"best_train_loss = {min(result['train_loss'])}")
-        print(f"best_train_acc = {max(result['train_acc'])}")
-        print(f"best_test_loss = {min(result['test_loss'])}")
-        print(f"best_test_acc = {max(result['test_acc'])}")
+    print(f"best_train_loss = {min(result['train_loss'])}")
+    print(f"best_train_acc = {max(result['train_acc'])}")
+    print(f"best_test_loss = {min(result['test_loss'])}")
+    print(f"best_test_acc = {max(result['test_acc'])}")
 
     return result
 

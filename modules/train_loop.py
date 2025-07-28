@@ -58,6 +58,6 @@ def test_loop( model: nn.Module,
     test_loss /= len(test_data)
     test_acc = accuracy.compute()
     accuracy.reset()
-    print(f"Train loss: {test_loss:.4f} | Train accuracy: {test_acc * 100:.3f}%")
+    print(f"Test loss: {test_loss:.4f} | Test accuracy: {test_acc * 100:.3f}%")
 
     return test_loss, test_acc
