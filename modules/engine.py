@@ -9,7 +9,7 @@ from modules import data_setup, get_data, train_loop
 NUM_WORKERS = os.cpu_count()
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-def feature_extraction(model: nn.Module,
+def feature_extraction(model_1: nn.Module,
                        file_name: str, 
                        data_path: str, 
                        save_path: str,
@@ -18,7 +18,7 @@ def feature_extraction(model: nn.Module,
                        accuracy,
                        loss_fn: nn.Module,
                        batch_size: int,
-                       optimizer: optim.Optimizer = optim.AdamW,
+                       optimizer_class: optim.Optimizer = optim.AdamW,
                        device: str = device,
                        num_workers: int = NUM_WORKERS,
                        epochs: int = 10,
@@ -33,8 +33,8 @@ def feature_extraction(model: nn.Module,
         train_dir, test_dir, weights, batch_size, num_workers
     )
 
-    model = model(weights=weights).to(device)
     crop_size = weights.transforms().crop_size[0]
+    model = model_1.to(device)
     original_classifier = model.classifier
     dropout_layer = original_classifier[0]
     dropout_p = dropout_layer.p
@@ -63,7 +63,7 @@ def feature_extraction(model: nn.Module,
     loss_fn = loss_fn
     train_accuracy = accuracy.to(device)
     test_accuracy = accuracy.to(device)
-    optimizer_fn = optimizer
+    optimizer = optimizer_class
 
     best_loss = float('inf')
 
@@ -78,7 +78,7 @@ def feature_extraction(model: nn.Module,
         print(f'\n[INFO] Epoch: {epoch + 1}/{epochs}\n')
         
         train_loss, train_acc = train_loop.train_loop(
-            model, train_dataloader, loss_fn, optimizer_fn, train_accuracy, device
+            model, train_dataloader, loss_fn, optimizer, train_accuracy, device
         )
 
         test_loss, test_acc = train_loop.test_loop(
