@@ -15,11 +15,10 @@ def feature_extraction(model: nn.Module,
                        save_path: str,
                        url: str, 
                        weight: models,
-                       optimizer: str,
                        accuracy,
                        loss_fn: nn.Module,
                        batch_size: int,
-                       learning_rate: float,
+                       optimizer: optim.Optimizer = optim.AdamW,
                        device: str = device,
                        num_workers: int = NUM_WORKERS,
                        epochs: int = 10,
@@ -62,7 +61,6 @@ def feature_extraction(model: nn.Module,
     loss_fn = loss_fn
     train_accuracy = accuracy.to(device)
     test_accuracy = accuracy.to(device)
-    optimizer = optim.optimizer(model.parameters(), lr=learning_rate)
 
     best_loss = float('inf')
 
