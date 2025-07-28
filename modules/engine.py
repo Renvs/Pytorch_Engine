@@ -53,10 +53,10 @@ def feature_extraction(model: nn.Module,
 
     summary(
         model, 
-        input_size= (1, 3, crop_size, crop_size),
+        input_size= (1, len(class_names), crop_size, crop_size),
         col_names= ['input_size', 'output_size', 'num_params', 'trainable'],
         col_width= 20,
-        row_settings=['varnames']
+        row_settings=['var_names']
     )
 
     loss_fn = loss_fn
