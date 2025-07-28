@@ -36,7 +36,7 @@ def feature_extraction(model: nn.Module,
 
     model = model(weights).to(device)
     crop_size = weights.transforms().crop_size[0]
-    original_classifier = weight.classifier
+    original_classifier = model.classifier
     dropout_layer = original_classifier[0]
     dropout_p = dropout_layer.p
     dropout_inplace = dropout_layer.inplace
