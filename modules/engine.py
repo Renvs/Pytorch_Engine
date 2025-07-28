@@ -3,7 +3,7 @@ import os
 import torchvision.models as models
 
 from torchinfo import summary
-from torch import nn
+from torch import nn, optim
 from modules import data_setup, get_data, train_loop
 
 NUM_WORKERS = os.cpu_count()
@@ -62,7 +62,7 @@ def feature_extraction(model: nn.Module,
     loss_fn = loss_fn
     train_accuracy = accuracy.to(device)
     test_accuracy = accuracy.to(device)
-    optimizer = optimizer(model.parameters(), lr=learning_rate)
+    optimizer = optim.optimizer(model.parameters(), lr=learning_rate)
 
     best_loss = float('inf')
 
