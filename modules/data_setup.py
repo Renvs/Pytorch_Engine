@@ -5,7 +5,7 @@ import os
 from torch.utils.data import DataLoader
 from torchvision import datasets
 
-NUM_WORKRES = os.cpu_count()
+NUM_WORKERS = os.cpu_count()
 
 def load_dataloader(train_dir: str, test_dir:str, weight: torchvision.models, batch_size: int, num_workers: int = NUM_WORKERS):
 
