@@ -18,6 +18,7 @@ def feature_extraction(model: nn.Module,
                        batch_size: int,
                        loss_fn: nn.Module,
                        optimizer: optim.Optimizer,
+                       learning_rate: float, 
                        accuracy,
                        device: str = device,
                        num_workers: int = NUM_WORKERS,
@@ -73,6 +74,7 @@ def feature_extraction(model: nn.Module,
 
     print(dummy_test)
 
+    optimizer = optimizer(model.parameters(), lr=learning_rate)
     accuracy = accuracy.to(device)
         
     result = train_test_step.train(
@@ -88,7 +90,6 @@ def feature_extraction(model: nn.Module,
     )
 
     return result
-
 
 
 def fine_tuning():

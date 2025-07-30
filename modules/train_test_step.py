@@ -40,7 +40,7 @@ def test_step( model: nn.Module,
                loss_fn: nn.Module, 
                accuracy,
                device: str = device 
-):
+) -> Tuple[float, float]:
     model.eval()
 
     test_loss, test_acc = 0, 0
@@ -119,8 +119,3 @@ def train( model: nn.Module,
     print(f"best_test_acc = {max(result['test_acc'])}")
 
     return result
-
-
-
-
-
