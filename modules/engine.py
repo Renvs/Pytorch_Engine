@@ -4,7 +4,7 @@ import torchvision.models as models
 
 from torchinfo import summary
 from torch import nn, optim
-from modules import data_setup, get_data, train_loop
+from modules import data_setup, get_data, train_test_step
 
 NUM_WORKERS = os.cpu_count()
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -15,30 +15,41 @@ def feature_extraction(model: nn.Module,
                        save_path: str,
                        url: str, 
                        weight: models,
-                       accuracy,
-                       loss_fn: nn.Module,
                        batch_size: int,
+                       loss_fn: nn.Module,
                        optimizer: optim.Optimizer,
+                       accuracy,
                        device: str = device,
                        num_workers: int = NUM_WORKERS,
                        epochs: int = 10,
                        ):
+    
+    # ==== Get The Data ====
+
+    print('[INFO] Getting Data')
     train_dir, test_dir, model_path = get_data.get_data(
         url= url, data_path= data_path, save_path= save_path, filename= file_name
     )
 
+    # ==== Prep The Data ====
+
+    print('[INFO] Preparing Dataloader')
     train_dataloader, test_dataloader, class_names = data_setup.load_dataloader(
         train_dir, test_dir, weight, batch_size, num_workers
     )
 
+    # ==== Prep The Model ====
+
+    print('[INFO] Preparing Model Classifier')
+
     crop_size = weight.transforms().crop_size[0]
+
     model = model.to(device)
+
     original_classifier = model.classifier
     dropout_layer = original_classifier[0]
     dropout_p = dropout_layer.p
     dropout_inplace = dropout_layer.inplace
-
-    print(model.classifier)
 
     for params in model.features.parameters():
         params.requires_grad = False
@@ -47,6 +58,10 @@ def feature_extraction(model: nn.Module,
         nn.Dropout(p=dropout_p, inplace=dropout_inplace),
         nn.Linear(in_features= model.classifier[1].in_features, out_features= len(class_names)),
     )
+
+    print(f'[INFO] {model.classifier[1].in_feaatures}')
+
+    # ==== Dummy Pass The Model
 
     dummy_test = summary(
         model, 
@@ -58,51 +73,18 @@ def feature_extraction(model: nn.Module,
 
     print(dummy_test)
 
-    train_accuracy = accuracy.to(device)
-    test_accuracy = accuracy.to(device)
-
     best_loss = float('inf')
-
-    result = {
-        'train_loss': [],
-        'train_acc': [],
-        'test_loss': [],
-        'test_acc': [],
-    }
-    
-    for epoch in range(epochs):
-        print(f'\n[INFO] Epoch: {epoch + 1}/{epochs}\n')
         
-        train_loss, train_acc = train_loop.train_loop(
-            model, train_dataloader, loss_fn, optimizer, train_accuracy, device
-        )
-
-        test_loss, test_acc = train_loop.test_loop(
-            model, test_dataloader, loss_fn, test_accuracy, device
-        )
-
-        if test_loss < best_loss:
-            best_loss = test_loss
-            torch.save(model.state_dict(), model_path)
-            print(f'Save at {model_path} Loss: {test_loss:.4f}')
-
-        current_result = {
-            'train_loss': train_loss,
-            'train_acc': train_acc,
-            'test_loss': test_loss,
-            'test_acc': test_acc
-        }
-
-        for key, value in current_result.items():
-            result[key].append(value)
-
-        print(f"Train loss: {train_loss:.4f} | Train accuracy: {train_acc * 100:.3f}%")
-        print(f"Test loss: {test_loss:.4f} | Test accuracy: {test_acc * 100:.3f}%")
-
-    print(f"best_train_loss = {min(result['train_loss'])}")
-    print(f"best_train_acc = {max(result['train_acc'])}")
-    print(f"best_test_loss = {min(result['test_loss'])}")
-    print(f"best_test_acc = {max(result['test_acc'])}")
+    result = train_test_step.train(
+        model=model, 
+        train_data=train_dataloader,
+        test_data=test_dataloader,
+        loss_fn=loss_fn,
+        optimizer=optimizer,
+        accuracy=accuracy,
+        epochs=epochs,
+        device=device
+    )
 
     return result
 
