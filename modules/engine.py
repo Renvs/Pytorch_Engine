@@ -73,7 +73,7 @@ def feature_extraction(model: nn.Module,
 
     print(dummy_test)
 
-    best_loss = float('inf')
+    accuracy = accuracy.to(device)
         
     result = train_test_step.train(
         model=model, 
