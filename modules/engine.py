@@ -9,7 +9,7 @@ from modules import data_setup, get_data, train_loop
 NUM_WORKERS = os.cpu_count()
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-def feature_extraction(model_1: nn.Module,
+def feature_extraction(model: nn.Module,
                        file_name: str, 
                        data_path: str, 
                        save_path: str,
@@ -27,14 +27,12 @@ def feature_extraction(model_1: nn.Module,
         url= url, data_path= data_path, save_path= save_path, filename= file_name
     )
 
-    weights = weight
-
     train_dataloader, test_dataloader, class_names = data_setup.load_dataloader(
-        train_dir, test_dir, weights, batch_size, num_workers
+        train_dir, test_dir, weight, batch_size, num_workers
     )
 
-    crop_size = weights.transforms().crop_size[0]
-    model = model_1.to(device)
+    crop_size = weight.transforms().crop_size[0]
+    model = model.to(device)
     original_classifier = model.classifier
     dropout_layer = original_classifier[0]
     dropout_p = dropout_layer.p
@@ -58,7 +56,7 @@ def feature_extraction(model_1: nn.Module,
         row_settings=['var_names']
     )
 
-    dummy_test
+    print(dummy_test)
 
     train_accuracy = accuracy.to(device)
     test_accuracy = accuracy.to(device)
@@ -98,6 +96,9 @@ def feature_extraction(model_1: nn.Module,
         for key, value in current_result.items():
             result[key].append(value)
 
+        print(f"Train loss: {train_loss:.4f} | Train accuracy: {train_acc * 100:.3f}%")
+        print(f"Test loss: {test_loss:.4f} | Test accuracy: {test_acc * 100:.3f}%")
+
     print(f"best_train_loss = {min(result['train_loss'])}")
     print(f"best_train_acc = {max(result['train_acc'])}")
     print(f"best_test_loss = {min(result['test_loss'])}")
@@ -114,7 +115,3 @@ def fine_tuning():
 def original_model():
     # ==== Soon ====
     return
-
-
-
-
