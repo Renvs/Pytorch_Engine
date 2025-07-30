@@ -82,6 +82,7 @@ def feature_extraction(model: nn.Module,
         loss_fn=loss_fn,
         optimizer=optimizer,
         accuracy=accuracy,
+        model_path=model_path,
         epochs=epochs,
         device=device
     )
