@@ -109,9 +109,9 @@ def train( model: nn.Module,
             print(f'Save at {model_path} Loss: {test_loss:.4f}')
 
         result['train_loss'].append(train_loss)
-        result['train_acc'].append(train_acc)
+        result['train_acc'].append(train_acc.item())
         result['test_loss'].append(test_loss)
-        result['test_acc'].append(test_acc)
+        result['test_acc'].append(test_acc.item())
 
     print(f"best_train_loss = {min(result['train_loss'])}")
     print(f"best_train_acc = {max(result['train_acc'])}")
