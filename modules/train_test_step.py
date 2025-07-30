@@ -78,6 +78,8 @@ def train( model: nn.Module,
     
     model.to(device)
 
+    best_loss = float('inf')
+
     for epoch in tqdm(range(epochs)):
 
         print(f"Epoch {epoch + 1}/{epochs}")
