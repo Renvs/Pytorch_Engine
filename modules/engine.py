@@ -59,7 +59,7 @@ def feature_extraction(model: nn.Module,
         nn.Linear(in_features= model.classifier[1].in_features, out_features= len(class_names)),
     )
 
-    print(f'[INFO] {model.classifier[1].in_feaatures}')
+    print(f'[INFO] {model.classifier[1].in_features}')
 
     # ==== Dummy Pass The Model
 
