@@ -78,7 +78,7 @@ def feature_extraction(model: nn.Module,
         )
 
         test_loss, test_acc = train_loop.test_loop(
-            model, test_dataloader, loss_fn, test_accuracy, save_path, device
+            model, test_dataloader, loss_fn, test_accuracy, device
         )
 
         if test_loss < best_loss:
