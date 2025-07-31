@@ -183,12 +183,12 @@ def single_tracking(
 
         writer.add_scalars(main_tag= 'Loss',
                         tag_scalar_dict={'train_loss': train_loss, 'test_loss': test_loss}, 
-                        global_step= epochs 
+                        global_step= epoch
                         )
         
         writer.add_scalars(main_tag= 'Accuracy',
                         tag_scalar_dict= {'train_accuracy': train_loss, 'test_accuracy': test_loss}, 
-                        global_step= epochs 
+                        global_step= epoch
                         )
         
     writer.add_graph(model=model, 
