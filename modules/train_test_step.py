@@ -1,5 +1,6 @@
 import torch
 import tqdm
+import SummaryWriter
 
 from torch import nn, optim
 from torch.utils.tensorboard import SummaryWriter

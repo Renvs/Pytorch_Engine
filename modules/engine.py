@@ -104,14 +104,11 @@ def single_tracking(
         optimizer: optim.Optimizer,
         learning_rate: float, 
         accuracy,
+        writer: SummaryWriter,
         device: str = device,
         num_workers: int = NUM_WORKERS,
         epochs: int = 10,
-):
-    # ==== Prep The Summary Writer ====
-    
-    writer = SummaryWriter()
-    
+):  
     # ==== Get The Data ====
 
     print('[INFO] Getting Data')
@@ -177,6 +174,7 @@ def single_tracking(
         epochs=epochs,
         batch_size=batch_size,
         image_size=crop_size,
+        writer=writer,
         device=device
     )
 
