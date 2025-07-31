@@ -166,7 +166,7 @@ def single_tracking(
         
     # ==== Train The Model ====
 
-    result = train_test_step.train(
+    result = train_test_step.single_tracking(
         model=model, 
         train_data=train_dataloader,
         test_data=test_dataloader,
@@ -175,23 +175,10 @@ def single_tracking(
         accuracy=accuracy,
         model_path=model_path,
         epochs=epochs,
+        batch_size=batch_size,
+        image_size=crop_size,
         device=device
     )
-
-    # ==== Tensorboard ====
-
-    writer.add_scalars(main_tag= 'Loss',
-                       tag_scalar_dict= {'train_loss': result['train_loss'], 'test_loss': result['test_loss']}, 
-                       global_step= epochs 
-                       )
-    
-    writer.add_scalars(main_tag= 'Accuracy',
-                       tag_scalar_dict= {'train_accuracy': result['train_accuracy'], 'test_accuracy': result['test_accuracy']}, 
-                       global_step= epochs 
-                       )
-    writer.add_graph(model=model, 
-                     input_to_model= torch.randn(batch_size, 3, crop_size, crop_size).to(device))
-    writer.close()
 
     return result
     
