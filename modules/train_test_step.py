@@ -132,10 +132,9 @@ def single_tracking(
         epochs: int,
         batch_size: int, 
         image_size: int,
+        writer: SummaryWriter,
         device: str = device
 ) -> Dict[str, List]:
-    
-    writer = SummaryWriter()
 
     result = {
         'train_loss': [],
