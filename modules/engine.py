@@ -1,11 +1,11 @@
 import torch 
 import os
 import torchvision.models as models
+import data_setup, get_data, train_test_step
 
 from torch.utils.tensorboard import SummaryWriter
 from torchinfo import summary
 from torch import nn, optim
-from modules import data_setup, get_data, train_test_step
 
 NUM_WORKERS = os.cpu_count()
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
