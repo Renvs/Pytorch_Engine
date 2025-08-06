@@ -181,15 +181,19 @@ def single_tracking(
         result['test_loss'].append(test_loss)
         result['test_acc'].append(test_acc.item())
 
-        writer.add_scalars(main_tag= 'Loss',
-                        tag_scalar_dict={'train_loss': train_loss, 'test_loss': test_loss}, 
-                        global_step= epoch
-                        )
-        
-        writer.add_scalars(main_tag= 'Accuracy',
-                        tag_scalar_dict= {'train_accuracy': train_loss, 'test_accuracy': test_loss}, 
-                        global_step= epoch
-                        )
+        if writer:
+            
+            writer.add_scalars(
+                main_tag= 'Loss',
+                tag_scalar_dict={'train_loss': train_loss, 'test_loss': test_loss}, 
+                global_step= epoch
+            )
+            
+            writer.add_scalars(
+                main_tag= 'Accuracy',
+                tag_scalar_dict= {'train_accuracy': train_loss, 'test_accuracy': test_loss}, 
+                global_step= epoch
+            )
         
     writer.add_graph(model=model, 
                      input_to_model= torch.randn(batch_size, 3, image_size, image_size).to(device))
