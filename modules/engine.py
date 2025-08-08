@@ -1,7 +1,7 @@
 import torch 
 import os
 import torchvision.models as models
-from modules import data_setup, get_data, train_test_step, create_summary
+import data_setup, get_data, train_test_step, create_summary
 
 from torch.utils.tensorboard.writer import SummaryWriter
 from torchinfo import summary

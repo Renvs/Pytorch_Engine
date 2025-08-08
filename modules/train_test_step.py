@@ -1,6 +1,6 @@
 import torch
 import tqdm
-import modules.create_summary as create_summary
+import create_summary as create_summary
 
 from torch import nn, optim
 from torch.utils.tensorboard import SummaryWriter
