@@ -1,6 +1,6 @@
 import torch
 import tqdm
-import SummaryWriter
+import modules.create_summary as create_summary
 
 from torch import nn, optim
 from torch.utils.tensorboard import SummaryWriter
@@ -133,7 +133,7 @@ def single_tracking(
         epochs: int,
         batch_size: int, 
         image_size: int,
-        writer: SummaryWriter,
+        writer: create_summary,
         device: str = device
 ) -> Dict[str, List]:
 

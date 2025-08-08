@@ -1,11 +1,12 @@
 import torch 
 import os
 import torchvision.models as models
-import data_setup, get_data, train_test_step
+from modules import data_setup, get_data, train_test_step, create_summary
 
-from torch.utils.tensorboard import SummaryWriter
+from torch.utils.tensorboard.writer import SummaryWriter
 from torchinfo import summary
 from torch import nn, optim
+from typing import Tuple, Dict, List
 
 NUM_WORKERS = os.cpu_count()
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -179,8 +180,64 @@ def single_tracking(
     )
 
     return result
-    
 
+def multiple_tracking(
+  model_list: Dict[str, List[str]],
+  data_list: Dict[str, List[str]],
+  epochs: List[int],
+  batch_size: int,
+  learning_rate: float, 
+  optimizer_fn,
+  accuracy_fn,
+  num_workers: int,
+  save_path: str,    
+  device: str = device ,
+) :
+    
+    experiment_num = 0
+    result = []
+
+    total_experiment = len(model_list)*len(data_list)*len(epochs)
+
+    for model_name, (model_fn, weight) in model_list.items():
+        for data_name, url in data_list.items():
+            for epoch in epochs:
+
+                experiment_num += 1
+
+                print(f'[INFO] STARTING EXPERIMENT {experiment_num}/{total_experiment}')
+                print(f'[INDO] MODEL: {model_name}, DATA: {data_name}, EPOCHS: {epoch}')
+
+                model = model_fn(weights=weight).to(device)
+                
+                writer = create_summary.create_summary_writer(
+                    f'tries_{experiment_num}', f'{model_name}', f'{data_name}'
+                )
+
+                experiment_result = single_tracking(
+                    model=model,
+                    file_name=data_name, 
+                    data_path='dataset',
+                    save_path=save_path, 
+                    url= url, 
+                    weight=weight,
+                    batch_size=batch_size,
+                    loss_fn=nn.CrossEntropyLoss(),
+                    optimizer=optimizer_fn,
+                    learning_rate=learning_rate, 
+                    accuracy=accuracy_fn,
+                    writer=writer,
+                    device=device,
+                    num_workers=num_workers,
+                    epochs=epoch
+                )
+
+                result.append(experiment_result)
+
+                torch.save(model.state_dict(), f'{save_path}/{model_name}_{data_name}_{epoch}.pt')
+
+    return result
+    
 def fine_tuning():
     # ==== Soon ====
     return
