@@ -5,6 +5,7 @@ from torch.utils.tensorboard.writer import SummaryWriter
 def create_summary_writer(
     name: str,
     model_name: str,
+    epoch: int,
     extra: str = None,
 ) -> SummaryWriter:
     """
@@ -27,6 +28,7 @@ def create_summary_writer(
         "runs",
         timestamp,
         name,
+        epoch,
         model_name,
     )
 
