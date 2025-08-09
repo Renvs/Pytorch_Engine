@@ -3,7 +3,6 @@ import torch
 from torch.utils.tensorboard.writer import SummaryWriter
 
 def create_summary_writer(
-    name: str,
     model_name: str,
     epoch: int,
     extra: str = None,
@@ -27,9 +26,9 @@ def create_summary_writer(
     log_dir = os.path.join(
         "runs",
         timestamp,
-        name,
-        epoch,
         model_name,
+        epoch,
+        extra,
     )
 
     if extra:
