@@ -191,7 +191,7 @@ def single_tracking(
             
             writer.add_scalars(
                 main_tag= 'Accuracy',
-                tag_scalar_dict= {'train_accuracy': train_loss, 'test_accuracy': test_loss}, 
+                tag_scalar_dict= {'train_accuracy': train_acc, 'test_accuracy': test_acc}, 
                 global_step= epoch
             )
         
