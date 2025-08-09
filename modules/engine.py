@@ -191,6 +191,7 @@ def multiple_tracking(
   accuracy_fn,
   num_workers: int,
   save_path: str,    
+  model_path: str,
   device: str = device ,
 ) :
     
@@ -218,7 +219,8 @@ def multiple_tracking(
                     model=model,
                     file_name=data_name, 
                     data_path='dataset',
-                    save_path=save_path, 
+                    save_path=save_path,
+                    model_path=model_path,
                     url= url, 
                     weight=weight,
                     batch_size=batch_size,
@@ -233,6 +235,11 @@ def multiple_tracking(
                 )
 
                 result.append(experiment_result)
+                
+                if result['test_loss'] < best_loss:
+                    best_loss = result['test_loss']
+                    torch.save(model.state_dict(), model_path)
+                    print(f'Save at {model_path} Loss: {result['test_loss']:.4f}')
 
                 torch.save(model.state_dict(), f'{save_path}/{model_name}_{data_name}_{epoch}.pt')
 

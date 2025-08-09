@@ -129,7 +129,6 @@ def single_tracking(
         loss_fn: nn.Module, 
         optimizer: optim.Optimizer, 
         accuracy,
-        model_path: str,
         epochs: int,
         batch_size: int, 
         image_size: int,
@@ -170,11 +169,6 @@ def single_tracking(
             device=device
         )
         print(f"Test loss: {test_loss:.4f} | Test accuracy: {test_acc * 100:.3f}%")
-
-        if test_loss < best_loss:
-            best_loss = test_loss
-            torch.save(model.state_dict(), model_path)
-            print(f'Save at {model_path} Loss: {test_loss:.4f}')
 
         result['train_loss'].append(train_loss)
         result['train_acc'].append(train_acc.item())
