@@ -211,7 +211,7 @@ def multiple_tracking(
                 model = model_fn(weights=weight).to(device)
                 
                 writer = create_summary.create_summary_writer(
-                    f'tries_{experiment_num}', f'{model_name}', f'{data_name}'
+                    f'tries_{experiment_num}', f'{epoch}_epoch', f'{model_name}'
                 )
 
                 experiment_result = single_tracking(
