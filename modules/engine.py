@@ -220,7 +220,6 @@ def multiple_tracking(
                     file_name=data_name, 
                     data_path='dataset',
                     save_path=save_path,
-                    model_path=model_path,
                     url= url, 
                     weight=weight,
                     batch_size=batch_size,
