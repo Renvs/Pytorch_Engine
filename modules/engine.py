@@ -171,7 +171,6 @@ def single_tracking(
         loss_fn=loss_fn,
         optimizer=optimizer,
         accuracy=accuracy,
-        model_path=model_path,
         epochs=epochs,
         batch_size=batch_size,
         image_size=crop_size,
