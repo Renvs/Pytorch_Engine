@@ -164,7 +164,7 @@ def single_tracking(
         
     # ==== Train The Model ====
 
-    result = train_test_step.single_tracking(
+    result = train_test_step.summary_writer_addon(
         model=model, 
         train_data=train_dataloader,
         test_data=test_dataloader,
@@ -197,6 +197,7 @@ def multiple_tracking(
     
     experiment_num = 0
     result = []
+    best_loss = float('inf')
 
     total_experiment = len(model_list)*len(data_list)*len(epochs)
 

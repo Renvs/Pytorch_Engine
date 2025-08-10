@@ -122,7 +122,7 @@ def train( model: nn.Module,
 
     return result
 
-def single_tracking(
+def summary_writer_addon(
         model: nn.Module,
         train_data: torch.utils.data.DataLoader, 
         test_data: torch.utils.data.DataLoader,
@@ -144,8 +144,6 @@ def single_tracking(
         }
     
     model.to(device)
-
-    best_loss = float('inf')
 
     for epoch in tqdm(range(epochs)):
 
