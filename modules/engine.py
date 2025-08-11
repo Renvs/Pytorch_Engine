@@ -238,7 +238,7 @@ def multiple_tracking(
                 if min(experiment_result["test_loss"]) < best_loss:
                     best_loss = experiment_result["test_loss"]
                     torch.save(model.state_dict(), model_path)
-                    print(f'Save at {model_path} Loss: {experiment_result["test_loss"]:.4f}')
+                    print(f'Save at {model_path} Loss: {min(experiment_result["test_loss"]):.4f}')
 
                 torch.save(model.state_dict(), f'{save_path}/{model_name}_{data_name}_{epoch}.pt')
 
