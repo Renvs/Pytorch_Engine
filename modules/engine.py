@@ -192,7 +192,7 @@ def multiple_tracking(
   save_path: str,    
   model_path: str,
   device: str = device ,
-) :
+):
     
     experiment_num = 0
     result = []
