@@ -121,7 +121,7 @@ def single_tracking(
 
     print('[INFO] Preparing Dataloader')
     train_dataloader, test_dataloader, class_names = data_setup.load_dataloader(
-        train_dir, test_dir, weight, batch_size, num_workers
+        train_dir, test_dir, batch_size, weight, num_workers
     )
 
     # ==== Prep The Model ====

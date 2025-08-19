@@ -9,10 +9,23 @@ from typing import Tuple
 
 NUM_WORKERS = os.cpu_count()
 
-def load_dataloader(train_dir: str, test_dir:str, weight: torchvision.models, batch_size: int, num_workers: int = NUM_WORKERS):
+def load_dataloader(
+        train_dir: str,
+        test_dir:str,
+        batch_size: int,
+        weight: torchvision.models = None,
+        image_size: Tuple[int, int] = None,
+        num_workers: int = NUM_WORKERS):
 
-    weights = weight
-    transform = weights.transforms()
+    if weight is not None:
+        weights = weight
+        transform = weights.transforms()
+    else: 
+        transform = v2.Compose([
+            v2.ToImage(),
+            v2.Resize(size=image_size),
+            v2.ToDtype(dtype=torch.float32, scale=True)
+        ])
 
     train_data = datasets.ImageFolder(train_dir, transform=transform)
     test_data = datasets.ImageFolder(test_dir, transform=transform)
