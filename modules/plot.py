@@ -8,6 +8,7 @@ from torch import nn
 from typing import Tuple, List
 from PIL import Image
 from torchvision.transforms import v2
+from torchmetrics.classification import MulticlassF1Score, MulticlassPrecision, MulticlassRecall
 
 def images_prediction(
     model: nn.Module,
@@ -87,6 +88,18 @@ def dataset_prediction_v2(
             images.append(image)
             true_labels.append(true_label)
             pred_labels.append(pred_label)
+
+    num_classes = len(classes)
+    y_true = torch.tensor(true_labels)
+    y_pred = torch.tensor(pred_labels)
+
+    f1 = MulticlassF1Score(num_classes=num_classes, average="macro")(y_pred, y_true)
+    precision = MulticlassPrecision(num_classes=num_classes, average="macro")(y_pred, y_true)
+    recall = MulticlassRecall(num_classes=num_classes, average="macro")(y_pred, y_true)
+
+    print(f"Macro Precision: {precision:.4f}")
+    print(f"Macro Recall:    {recall:.4f}")
+    print(f"Macro F1 Score:  {f1:.4f}")
     
     # Plot results (same plotting code as above)
     plt.figure(figsize=(15, 10))
@@ -120,7 +133,7 @@ def dataset_prediction_v2(
         true_label_name = classes[true_labels[i]]
         
         if pred_label_name == true_label_name:
-            plt.title(f'Pred: {pred_label_name}\nTrue: {true_label_name}', 
+            plt.title(f'Pred: {pred_label_name} | {preds.max().cpu().item():.3f}\nTrue: {true_label_name}', 
                      c='g', fontsize=10)
         else:
             plt.title(f'Pred: {pred_label_name}\nTrue: {true_label_name}', 
@@ -130,4 +143,3 @@ def dataset_prediction_v2(
     
     plt.tight_layout()
     plt.show()
-    
