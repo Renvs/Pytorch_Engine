@@ -72,6 +72,7 @@ def dataset_prediction_v2(
     images = []
     true_labels = []
     pred_labels = []
+    logits = []
     
     # Make predictions for sampled images
     with torch.inference_mode():
@@ -88,6 +89,7 @@ def dataset_prediction_v2(
             images.append(image)
             true_labels.append(true_label)
             pred_labels.append(pred_label)
+            logits.append(preds.max().cpu().item())
 
     num_classes = len(classes)
     y_true = torch.tensor(true_labels)
@@ -133,10 +135,10 @@ def dataset_prediction_v2(
         true_label_name = classes[true_labels[i]]
         
         if pred_label_name == true_label_name:
-            plt.title(f'Pred: {pred_label_name} | {preds.max().cpu().item():.3f}\nTrue: {true_label_name}', 
+            plt.title(f'Pred: {pred_label_name} | {logits[i]:.3f}\nTrue: {true_label_name}', 
                      c='g', fontsize=10)
         else:
-            plt.title(f'Pred: {pred_label_name}\nTrue: {true_label_name}', 
+            plt.title(f'Pred: {pred_label_name} | {logits[i]:.3f}\nTrue: {true_label_name}', 
                      c='r', fontsize=10)
         
         plt.axis('off')
