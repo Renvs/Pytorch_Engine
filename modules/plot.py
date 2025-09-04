@@ -193,7 +193,6 @@ def plot_dataset(
     
     sample = random.sample(range(len(all_images)), n_images)
 
-    # Calculate grid dimensions
     if n_images <= 4:
         nrows, ncols = 2, 2
     elif n_images <= 9:
@@ -202,22 +201,17 @@ def plot_dataset(
         nrows, ncols = 4, 4
     else:
         import math
-        ncols = 8  # Limit columns for better readability
+        ncols = 8
         nrows = math.ceil(n_images / ncols)
 
     plt.figure(figsize=(ncols * 2, nrows * 2))
 
-    for plot_idx, data_idx in enumerate(sample, 1):  # Use enumerate to get subplot index
+    for plot_idx, data_idx in enumerate(sample, 1): 
         plt.subplot(nrows, ncols, plot_idx)
         
-        # Handle image format and normalization
         image = all_images[data_idx]
-        if image.shape[0] == 3:  # CHW format
-            image = image.permute(1, 2, 0)  # Convert to HWC
-        
-        # Normalize for display if needed
-        if image.min() < 0 or image.max() > 1:
-            image = (image - image.min()) / (image.max() - image.min())
+        if image.shape[0] == 3:  
+            image = image.permute(1, 2, 0)
         
         plt.imshow(image)
         plt.title(classes[all_labels[data_idx]])
