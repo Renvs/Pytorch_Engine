@@ -172,3 +172,31 @@ def plot_confusionmatrix(
     plt.ylabel('True')
     plt.title(f'Confusion Matrix Model {model.__class__.__name__}')
     plt.show()
+
+def plot_dataset(
+        dataset: torch.utils.data.DataLoader,
+        classes: List[str],
+        batch_size: int,
+        device: str
+): 
+    
+    all_images = []
+    all_labels = []
+
+    with torch.inference_mode():
+        for batch_images, batch_labels in dataset:
+            for i in range(batch_images.size(0)):
+                all_images.append(batch_images[i].cpu())
+                all_labels.append(batch_labels[i].item())
+
+    plt.figure(figsize=(15,10))
+
+    for i in range(len(all_images)):
+        plt.subplot(1, batch_size, i+1)
+        plt.imshow(all_images[i].permute(1, 2, 0))
+        plt.title(classes[all_labels[i]])
+        plt.axis('off')
+    
+    plt.tight_layout()
+    plt.show()
+    
