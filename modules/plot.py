@@ -33,11 +33,10 @@ def images_prediction(
         ])
 
     model.to(device)
-
     model.eval()
     with torch.inference_mode():
 
-        transformed_image = images_transform(pre_images).unsqueeze(dim=1)
+        transformed_image = images_transform(pre_images).unsqueeze(0)
         logits = model(transformed_image.to(device))
         preds = torch.softmax(logits, dim=1)
         label = torch.argmax(preds, dim=1)
@@ -155,7 +154,7 @@ def plot_confusionmatrix(
         classes: List[str],
         device: str
 ):
-    confmat = ConfusionMatrix(task='multiclass', num_classes=len(classes))
+    confmat = ConfusionMatrix(task='multiclass', num_classes=len(classes)).to(device)
 
     model.eval()
     with torch.inference_mode():
