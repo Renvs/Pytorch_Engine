@@ -3,11 +3,13 @@ import matplotlib.pyplot as plt
 import random
 import numpy as np
 import data_setup as dt
+import seaborn as sns
 
 from torch import nn
 from typing import Tuple, List
 from PIL import Image
 from torchvision.transforms import v2
+from torchmetrics import ConfusionMatrix
 from torchmetrics.classification import MulticlassF1Score, MulticlassPrecision, MulticlassRecall
 
 def images_prediction(
@@ -44,7 +46,7 @@ def images_prediction(
     plt.imshow(pre_images)
     plt.title(f"Predicted: {classes[label]} | Probability: {preds.max().cpu().item():.3f}")
 
-def dataset_prediction_v2(
+def dataset_prediction(
     model: nn.Module,
     test_data: torch.utils.data.DataLoader,
     classes: List[str],
@@ -144,4 +146,29 @@ def dataset_prediction_v2(
         plt.axis('off')
     
     plt.tight_layout()
+    plt.show()
+
+
+def plot_confusionmatrix(
+        model: nn.Module, 
+        dataset: torch.utils.data.DataLoader,
+        classes: List[str],
+        device: str
+):
+    confmat = ConfusionMatrix(task='multiclass', num_classes=len(classes))
+
+    model.eval()
+    with torch.inference_mode():
+        for x, y in dataset:
+            x, y = x.to(device), y.to(device)
+            preds = model(x)
+            confmat.update(preds, y)
+
+    cm = confmat.compute().cpu()
+
+    plt.figure(figsize=(15, 10))
+    sns.heatmap(cm, annot=True, fmt='g', cmap='Blues', xticklabels=classes, yticklabels=classes)
+    plt.xlabel('Predicted')
+    plt.ylabel('True')
+    plt.title(f'Confusion Matrix Model {model}')
     plt.show()
