@@ -123,7 +123,6 @@ def dataset_prediction(
     for i in range(len(images)):
         plt.subplot(nrows, ncols, i+1)
         
-        # Handle different image formats
         image = images[i]
         if image.dim() == 3:
             if image.shape[0] == 1:  # Grayscale
@@ -176,8 +175,7 @@ def plot_confusionmatrix(
 def plot_dataset(
         dataset: torch.utils.data.DataLoader,
         classes: List[str],
-        batch_size: int,
-        device: str
+        n_images: int,
 ): 
     
     all_images = []
@@ -189,10 +187,27 @@ def plot_dataset(
                 all_images.append(batch_images[i].cpu())
                 all_labels.append(batch_labels[i].item())
 
+    if n_images > len(all_images):
+        print(f"Warning: Requested {n_images} images but dataset only has {len(all_images)}. Using all available images.")
+        n_images = len(all_images)
+    
+    sample = random.sample(range(len(all_images)), n_images)
+
+    if n_images <= 4:
+        nrows, ncols = 2, 2
+    elif n_images <= 9:
+        nrows, ncols = 3, 3
+    elif n_images <= 16:
+        nrows, ncols = 4, 4
+    else:
+        import math
+        nrows = int(math.sqrt(n_images))
+        ncols = math.ceil(n_images / nrows)
+
     plt.figure(figsize=(15,10))
 
-    for i in range(len(all_images)):
-        plt.subplot(1, batch_size, i+1)
+    for idx in sample:
+        plt.subplot(nrows, ncols, i+1)
         plt.imshow(all_images[i].permute(1, 2, 0))
         plt.title(classes[all_labels[i]])
         plt.axis('off')
