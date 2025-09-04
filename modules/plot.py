@@ -207,9 +207,9 @@ def plot_dataset(
     plt.figure(figsize=(15,10))
 
     for idx in sample:
-        plt.subplot(nrows, ncols, i+1)
-        plt.imshow(all_images[i].permute(1, 2, 0))
-        plt.title(classes[all_labels[i]])
+        plt.subplot(nrows, ncols, idx+1)
+        plt.imshow(all_images[idx].permute(1, 2, 0))
+        plt.title(classes[all_labels[idx]])
         plt.axis('off')
     
     plt.tight_layout()
