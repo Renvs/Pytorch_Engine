@@ -44,6 +44,7 @@ def images_prediction(
     plt.figure()
     plt.imshow(pre_images)
     plt.title(f"Predicted: {classes[label]} | Probability: {preds.max().cpu().item():.3f}")
+    plt.axis('off')
 
 def dataset_prediction(
     model: nn.Module,
@@ -169,5 +170,5 @@ def plot_confusionmatrix(
     sns.heatmap(cm, annot=True, fmt='g', cmap='Blues', xticklabels=classes, yticklabels=classes)
     plt.xlabel('Predicted')
     plt.ylabel('True')
-    plt.title(f'Confusion Matrix Model {model}')
+    plt.title(f'Confusion Matrix Model {model.__class__.__name__}')
     plt.show()
