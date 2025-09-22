@@ -219,3 +219,36 @@ def plot_dataset(
     
     plt.tight_layout()
     plt.show()
+
+def patches_converter(
+        dataloader: torch.utils.data.DataLoader,
+        num_patches: int,
+        patch_size: int
+):
+    random_sample = random.randint(0, len(dataloader) - 1)
+    for i,(image_batch, label_batch) in enumerate(dataloader):
+        if i == random_sample:
+            random_image = random.randint(0, image_batch.shape[0] - 1)
+            image = image_batch[random_image].cpu().permute(1, 2, 0)
+
+    n_patches = num_patches // patch_size
+    
+    fig, axs = plt.subplots(nrows=n_patches,
+                            ncols=n_patches,
+                            figsize=(n_patches, n_patches),
+                            sharex=True,
+                            sharey=True)
+    plt.title(f'Patches of Images')
+    
+    for i in range(n_patches):
+        for j in range(n_patches):
+            patch_start_y = i * patch_size
+            patch_start_x = j * patch_size
+
+            axs[i, j].imshow(image[patch_start_y : patch_start_y + patch_size,
+                                        patch_start_x : patch_start_x + patch_size])
+            axs[i, j].set_ylabel(i+1, rotation='horizontal', horizontalalignment='right', verticalalignment='center')
+            axs[i, j].set_xlabel(j+1)
+            axs[i, j].set_xticks([])
+            axs[i, j].set_yticks([])
+            axs[i, j].label_outer()
