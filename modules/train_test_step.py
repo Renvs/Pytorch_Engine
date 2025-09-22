@@ -13,6 +13,7 @@ def train_step(model: nn.Module,
                train_data: torch.utils.data.DataLoader,
                loss_fn: nn.Module, 
                optimizer: optim.Optimizer,
+               scheduler: optim.lr_scheduler,
                accuracy,
                device: str = device 
 ) -> Tuple[float, float]:
@@ -30,6 +31,7 @@ def train_step(model: nn.Module,
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
+        scheduler.step()
     
     train_loss = train_loss / len(train_data)
     train_acc = accuracy.compute()
@@ -65,6 +67,7 @@ def train( model: nn.Module,
            test_data: torch.utils.data.DataLoader,
            loss_fn: nn.Module, 
            optimizer: optim.Optimizer, 
+           scheduler: optim.lr_scheduler,
            accuracy,
            model_path: str,
            epochs: int,
@@ -91,6 +94,7 @@ def train( model: nn.Module,
             train_data=train_data,
             loss_fn=loss_fn,
             optimizer=optimizer,
+            scheduler=scheduler,
             accuracy=accuracy,
             device=device
         )
@@ -128,6 +132,7 @@ def summary_writer_addon(
         test_data: torch.utils.data.DataLoader,
         loss_fn: nn.Module, 
         optimizer: optim.Optimizer, 
+        scheduler: optim.lr_scheduler,
         accuracy,
         epochs: int,
         batch_size: int, 
@@ -154,6 +159,7 @@ def summary_writer_addon(
             train_data=train_data,
             loss_fn=loss_fn,
             optimizer=optimizer,
+            scheduler=scheduler,
             accuracy=accuracy,
             device=device
         )
