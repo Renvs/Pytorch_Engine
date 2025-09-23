@@ -252,3 +252,43 @@ def patches_converter(
             axs[i, j].set_xticks([])
             axs[i, j].set_yticks([])
             axs[i, j].label_outer()
+
+def plot_loss_curves(results: Dict[str, List[float]]):
+    """Plots training curves of a results dictionary.
+
+    Args:
+        results (dict): A dictionary containing lists of training and testing
+                        loss and accuracy metrics.
+                        Expected keys: 'train_loss', 'train_acc',
+                                       'test_loss', 'test_acc'.
+    """
+    train_loss = results['train_loss']
+    test_loss = results['test_loss']
+
+    train_accuracy = results['train_acc']
+    test_accuracy = results['test_acc']
+
+    epochs = range(len(results['train_loss']))
+
+    plt.style.use('seaborn-v0_8-whitegrid')
+    fig, (ax1, ax2) = plt.subplots(nrows=1, ncols=2, figsize=(14, 6))
+
+    ax1.plot(epochs, train_loss, label='train_loss')
+    ax1.plot(epochs, test_loss, label='test_loss')
+    ax1.set_title('Loss Curves', fontsize=14)
+    ax1.set_xlabel('Epochs', fontsize=12)
+    ax1.set_ylabel('Loss', fontsize=12)
+    ax1.legend()
+
+    ax2.plot(epochs, train_accuracy, label='train_accuracy')
+    ax2.plot(epochs, test_accuracy, label='test_accuracy')
+    ax2.set_title('Accuracy Curves', fontsize=14)
+    ax2.set_xlabel('Epochs', fontsize=12)
+    ax2.set_ylabel('Accuracy', fontsize=12)
+    ax2.legend()
+
+    fig.suptitle('Training Results ', fontsize=16, fontweight='bold')
+
+    plt.tight_layout(rect=[0, 0.03, 1, 0.95])
+    plt.show()
+
