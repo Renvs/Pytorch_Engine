@@ -206,7 +206,7 @@ def single_tracking(
     if current_min_loss < best_loss:
         best_loss = current_min_loss
         torch.save(model.state_dict().copy(), model_path)
-        print(f'Save at {model_path} Loss: {min(result['test_loss']):.4f}')
+        print(f'Save at {model_path} Loss: {min(result["test_loss"]):.4f}')
 
     return result
 
