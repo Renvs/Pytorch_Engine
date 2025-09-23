@@ -6,7 +6,7 @@ import data_setup as dt
 import seaborn as sns
 
 from torch import nn
-from typing import Tuple, List
+from typing import Tuple, List, Dict
 from PIL import Image
 from torchvision.transforms import v2
 from torchmetrics import ConfusionMatrix
