@@ -141,19 +141,31 @@ def single_tracking(
 
     original_classifier = helper.get_nested_attr(model, classifier_name)
     in_features = None
+    is_conv_layer = False
 
     if isinstance(original_classifier, nn.Linear):
         in_features = original_classifier.in_features
+    elif isinstance(original_classifier, nn.Conv2d):
+        in_features = original_classifier.in_channels
+        is_conv_layer = True
     else: 
         for layer in reversed(list(original_classifier.modules())):
             if isinstance(layer, nn.Linear):
                 in_features = layer.in_features
                 break
+            elif isinstance(layer, nn.Conv2d):
+                in_features = layer.in_channels
+                is_conv_layer = True
+                break
 
-    if in_features is None:
+    if in_features :
         raise ValueError(f"Could not find Linear layer named '{classifier_name}' in the model")
 
-    new_classifier = nn.Linear(in_features=in_features, out_features=len(class_names))
+    if is_conv_layer:
+        new_classifier = nn.Conv2d(in_channels=in_features, out_channels=len(class_names))
+    else:
+        new_classifier = nn.Linear(in_features=in_features, out_features=len(class_names))
+        
     helper.set_nested_attr(model, classifier_name, new_classifier)
 
     new_params = [p for p in model.parameters() if p.requires_grad]
