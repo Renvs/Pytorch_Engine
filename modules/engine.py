@@ -105,14 +105,16 @@ def single_tracking(
         weight,
         batch_size: int,
         loss_fn: nn.Module,
-        optimizer,
-        scheduler,
+        optimizer_class,
+        learning_rate:float,
+        w_decay:float,
         accuracy,
         writer: SummaryWriter,
         img_size: Tuple[int, int] = None,
         device: str = device,
         num_workers: int = NUM_WORKERS,
         epochs: int = 10,
+        warm_epochs: int = 0
 ):  
     # ==== Get The Data ====
 
@@ -154,6 +156,18 @@ def single_tracking(
     new_classifier = nn.Linear(in_features=in_features, out_features=len(class_names))
     helper.set_nested_attr(model, classifier_name, new_classifier)
 
+    new_params = [p for p in model.parameters() if p.requires_grad]
+    optimizer = optimizer_class(params=new_params, lr=learning_rate, weight_decay=w_decay)
+
+    main_scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer=optimizer, T_max=epochs - warm_epochs)
+    warmup_scheduler = optim.lr_scheduler.LinearLR(optimizer=optimizer, start_factor=0.1, total_iters=warm_epochs)
+    scheduler = optim.lr_scheduler.SequentialLR(
+        optimizer,
+        schedulers=[warmup_scheduler, main_scheduler],
+        milestones=[warm_epochs]
+    )
+
+
     # ==== Dummy Pass The Model
 
     dummy_test = summary(
@@ -188,13 +202,14 @@ def single_tracking(
     return result
 
 def multiple_tracking(
-  model_list: Dict[str, Tuple[callable, str]],
+  model_list: Dict[str, Tuple[callable, str, str]],
+  img_size:Tuple[int, int],
   data_list: Dict[str, str],
-  epochs: List[int],
+  epochs: Dict[int, int],
   batch_size: int,
+  optimizer_class,
   learning_rate: float, 
-  optimizer_fn,
-  scheduler,
+  w_decay: float,
   accuracy_fn,
   num_workers: int,
   save_path: str,    
@@ -208,10 +223,10 @@ def multiple_tracking(
 
     total_experiment = len(model_list)*len(data_list)*len(epochs)
 
-    for model_name, (model_fn, weight) in model_list.items():
+    for model_name, (model_fn, weight, classifier) in model_list.items():
         for data_name, url in data_list.items():
-            for epoch in epochs:
-
+            for epoch, warmup_epoch in epochs.items():
+                    
                 experiment_num += 1
 
                 print(f'[INFO] STARTING EXPERIMENT {experiment_num}/{total_experiment}')
@@ -225,6 +240,7 @@ def multiple_tracking(
 
                 experiment_result = single_tracking(
                     model=model,
+                    classifier_name=classifier,
                     file_name=data_name, 
                     data_path='dataset',
                     save_path=save_path,
@@ -232,24 +248,31 @@ def multiple_tracking(
                     weight=weight,
                     batch_size=batch_size,
                     loss_fn=nn.CrossEntropyLoss(),
-                    optimizer=optimizer_fn,
-                    scheduler=scheduler,
+                    optimizer_class=optimizer_class,
                     learning_rate=learning_rate, 
+                    w_decay=w_decay,
                     accuracy=accuracy_fn,
                     writer=writer,
+                    img_size=img_size,
                     device=device,
                     num_workers=num_workers,
-                    epochs=epoch
+                    epochs=epoch,
+                    warm_epochs=warmup_epoch
                 )
 
                 result.append(experiment_result)
                 
-                if min(experiment_result["test_loss"]) < best_loss:
-                    best_loss = min(experiment_result["test_loss"])
-                    torch.save(model.state_dict(), model_path)
+                current_min_loss = min(experiment_result['test_loss'])
+
+                if current_min_loss < best_loss:
+                    best_loss = current_min_loss
+                    best_model_state = model.state_dict().copy()
                     print(f'Save at {model_path} Loss: {min(experiment_result["test_loss"]):.4f}')
 
-                torch.save(model.state_dict(), f'{save_path}/{model_name}_{data_name}_{epoch}.pt')
+                if best_model_state:
+                    torch.save(best_model_state, f'{save_path}/{model_name}_{data_name}_{epoch}.pt')
+                else:
+                    print('No model to save')
 
     return result
     
