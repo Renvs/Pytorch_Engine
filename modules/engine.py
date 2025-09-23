@@ -180,7 +180,7 @@ def single_tracking(
         accuracy=accuracy,
         epochs=epochs,
         batch_size=batch_size,
-        image_size=crop_size,
+        image_size=img_size[0],
         writer=writer,
         device=device
     )
