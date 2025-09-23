@@ -106,7 +106,6 @@ def single_tracking(
         loss_fn: nn.Module,
         optimizer,
         scheduler,
-        learning_rate: float, 
         accuracy,
         writer: SummaryWriter,
         device: str = device,
@@ -162,7 +161,6 @@ def single_tracking(
 
     print(dummy_test)
 
-    optimizer = optimizer(model.parameters(), lr=learning_rate)
     accuracy = accuracy.to(device)
         
     # ==== Train The Model ====
