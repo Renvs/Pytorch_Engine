@@ -109,6 +109,7 @@ def single_tracking(
         scheduler,
         accuracy,
         writer: SummaryWriter,
+        img_size: Tuple[int, int] = None,
         device: str = device,
         num_workers: int = NUM_WORKERS,
         epochs: int = 10,
@@ -124,7 +125,7 @@ def single_tracking(
 
     print('\n[INFO] Preparing Dataloader\n')
     train_dataloader, test_dataloader, class_names = data_setup.load_dataloader(
-        train_dir, test_dir, batch_size, weight, num_workers
+        train_dir, test_dir, batch_size, weight, img_size, num_workers
     )
 
     # ==== Prep The Model ====
@@ -157,7 +158,7 @@ def single_tracking(
 
     dummy_test = summary(
         model, 
-        input_size= (1, 3, crop_size, crop_size),
+        input_size= (1, 3, img_size[0], img_size[1]),
         col_names= ['input_size', 'output_size', 'num_params', 'trainable'],
         col_width= 20,
         row_settings=['var_names']
