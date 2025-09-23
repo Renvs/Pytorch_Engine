@@ -162,7 +162,7 @@ def single_tracking(
         raise ValueError(f"Could not find Linear layer named '{classifier_name}' in the model")
 
     if is_conv_layer:
-        new_classifier = nn.Conv2d(in_channels=in_features, out_channels=len(class_names))
+        new_classifier = nn.Conv2d(in_channels=in_features, out_channels=len(class_names), kernel_size=(1, 1), stride=(1, 1))
     else:
         new_classifier = nn.Linear(in_features=in_features, out_features=len(class_names))
 
