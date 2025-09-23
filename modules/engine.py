@@ -199,6 +199,15 @@ def single_tracking(
         device=device
     )
 
+    best_loss = float('inf')
+
+    current_min_loss = min(result['test_loss'])
+
+    if current_min_loss < best_loss:
+        best_loss = current_min_loss
+        torch.save(model.state_dict().copy(), model_path)
+        print(f'Save at {model_path} Loss: {min(result['test_loss']):.4f}')
+
     return result
 
 def multiple_tracking(
@@ -269,10 +278,10 @@ def multiple_tracking(
                     best_model_state = model.state_dict().copy()
                     print(f'Save at {model_path} Loss: {min(experiment_result["test_loss"]):.4f}')
 
-                if best_model_state:
-                    torch.save(best_model_state, f'{save_path}/{model_name}_{data_name}_{epoch}.pt')
-                else:
-                    print('No model to save')
+    if best_model_state:
+        torch.save(best_model_state, f'{save_path}/{model_name}_{data_name}_{epoch}.pt')
+    else:
+        print('No model to save')
 
     return result
     
