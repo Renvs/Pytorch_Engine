@@ -1,7 +1,7 @@
 import torch 
 import os
 import torchvision.models as models
-import data_setup, get_data, train_test_step, create_summary
+import data_setup, get_data, train_test_step, create_summary, helper
 
 from torch.utils.tensorboard.writer import SummaryWriter
 from torchinfo import summary
@@ -97,6 +97,7 @@ def feature_extraction(model: nn.Module,
 
 def single_tracking(
         model: nn.Module,
+        classifier_name: str,
         file_name: str, 
         data_path: str, 
         save_path: str,
@@ -114,40 +115,43 @@ def single_tracking(
 ):  
     # ==== Get The Data ====
 
-    print('[INFO] Getting Data')
+    print('\n[INFO] Getting Data\n')
     train_dir, test_dir, model_path = get_data.get_data(
         url= url, data_path= data_path, save_path= save_path, filename= file_name
     )
 
     # ==== Prep The Data ====
 
-    print('[INFO] Preparing Dataloader')
+    print('\n[INFO] Preparing Dataloader\n')
     train_dataloader, test_dataloader, class_names = data_setup.load_dataloader(
         train_dir, test_dir, batch_size, weight, num_workers
     )
 
     # ==== Prep The Model ====
 
-    print('[INFO] Preparing Model Classifier')
-
-    crop_size = weight.transforms().crop_size[0]
+    print('\n[INFO] Preparing Model Classifier\n')
 
     model = model.to(device)
-
-    original_classifier = model.classifier
-    dropout_layer = original_classifier[0]
-    dropout_p = dropout_layer.p
-    dropout_inplace = dropout_layer.inplace
 
     for params in model.features.parameters():
         params.requires_grad = False
 
-    model.classifier = nn.Sequential(
-        nn.Dropout(p=dropout_p, inplace=dropout_inplace),
-        nn.Linear(in_features= model.classifier[1].in_features, out_features= len(class_names)),
-    )
+    original_classifier = helper.get_nested_attr(model, classifier_name)
+    in_features = None
 
-    print(f'[INFO] {model.classifier[1].in_features}')
+    if isinstance(original_classifier, nn.Linear):
+        in_features = original_classifier.in_features
+    else: 
+        for layer in reversed(list(original_classifier.modules())):
+            if isinstance(layer, nn.Linear):
+                in_features = layer.in_features
+                break
+
+    if in_features is None:
+        raise ValueError(f"Could not find Linear layer named '{classifier_name}' in the model")
+
+    new_classifier = nn.Linear(in_features=in_features, out_features=len(class_names))
+    helper.set_nested_attr(model, classifier_name, new_classifier)
 
     # ==== Dummy Pass The Model
 
