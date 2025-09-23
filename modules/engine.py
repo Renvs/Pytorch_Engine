@@ -158,14 +158,14 @@ def single_tracking(
                 is_conv_layer = True
                 break
 
-    if in_features :
+    if in_features is None:
         raise ValueError(f"Could not find Linear layer named '{classifier_name}' in the model")
 
     if is_conv_layer:
         new_classifier = nn.Conv2d(in_channels=in_features, out_channels=len(class_names))
     else:
         new_classifier = nn.Linear(in_features=in_features, out_features=len(class_names))
-        
+
     helper.set_nested_attr(model, classifier_name, new_classifier)
 
     new_params = [p for p in model.parameters() if p.requires_grad]
@@ -178,7 +178,6 @@ def single_tracking(
         schedulers=[warmup_scheduler, main_scheduler],
         milestones=[warm_epochs]
     )
-
 
     # ==== Dummy Pass The Model
 
