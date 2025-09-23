@@ -133,7 +133,7 @@ def single_tracking(
 
     model = model.to(device)
 
-    for params in model.features.parameters():
+    for params in model.parameters():
         params.requires_grad = False
 
     original_classifier = helper.get_nested_attr(model, classifier_name)
