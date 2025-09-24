@@ -152,7 +152,7 @@ def summary_writer_addon(
 
     for epoch in tqdm(range(epochs)):
 
-        print(f"Epoch {epoch + 1}/{epochs}")
+        print(f"Epoch {epoch + 1}/{epochs}\n")
         
         train_loss, train_acc = train_step(
             model=model, 
@@ -197,9 +197,9 @@ def summary_writer_addon(
                      input_to_model= torch.randn(batch_size, 3, image_size, image_size).to(device))
     writer.close()
 
-    print(f"best_train_loss = {min(result['train_loss'])}")
+    print(f"\nbest_train_loss = {min(result['train_loss'])}")
     print(f"best_train_acc = {max(result['train_acc'])}")
     print(f"best_test_loss = {min(result['test_loss'])}")
-    print(f"best_test_acc = {max(result['test_acc'])}")
+    print(f"best_test_acc = {max(result['test_acc'])}\n")
 
     return result

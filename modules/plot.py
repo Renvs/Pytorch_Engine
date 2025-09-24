@@ -253,7 +253,7 @@ def patches_converter(
             axs[i, j].set_yticks([])
             axs[i, j].label_outer()
 
-def plot_loss_curves(results: Dict[str, List[float]]):
+def plot_loss_curves(results: Dict[str, List[float]], model_name: str):
     """Plots training curves of a results dictionary.
 
     Args:
@@ -264,7 +264,6 @@ def plot_loss_curves(results: Dict[str, List[float]]):
     """
     train_loss = results['train_loss']
     test_loss = results['test_loss']
-
     train_accuracy = results['train_acc']
     test_accuracy = results['test_acc']
 
@@ -288,6 +287,7 @@ def plot_loss_curves(results: Dict[str, List[float]]):
     ax2.legend()
 
     fig.suptitle('Training Results ', fontsize=16, fontweight='bold')
+    fig.suptitle(f'{model_name}', fontsize=16, fontweight='bold')
 
     plt.tight_layout(rect=[0, 0.03, 1, 0.95])
     plt.show()
