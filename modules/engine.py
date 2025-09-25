@@ -12,6 +12,7 @@ NUM_WORKERS = os.cpu_count()
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 def feature_extraction(model: nn.Module,
+                       model_name: str,
                        classifier_name: str, 
                        file_name: str, 
                        data_path: str, 
@@ -36,7 +37,7 @@ def feature_extraction(model: nn.Module,
 
     print('[INFO] Getting Data')
     train_dir, test_dir, model_path = get_data.get_data(
-        url= url, data_path= data_path, save_path= save_path, filename= file_name
+        model_name=model_name, url= url, data_path= data_path, save_path= save_path, filename= file_name
     )
 
     # ==== Prep The Data ====
@@ -128,6 +129,7 @@ def feature_extraction(model: nn.Module,
 
 def single_tracking(
         model: nn.Module,
+        model_name: str,
         classifier_name: str,
         file_name: str, 
         data_path: str, 
@@ -152,7 +154,7 @@ def single_tracking(
 
     print('\n[INFO] Getting Data\n')
     train_dir, test_dir, model_path = get_data.get_data(
-        url= url, data_path= data_path, save_path= save_path, filename= file_name
+        model_name=model_name, url= url, data_path= data_path, save_path= save_path, filename= file_name
     )
 
     # ==== Prep The Data ====
@@ -294,6 +296,7 @@ def multiple_tracking(
 
                 experiment_result = single_tracking(
                     model=model,
+                    model_name=model_name,
                     classifier_name=classifier,
                     file_name=data_name, 
                     data_path='dataset',
