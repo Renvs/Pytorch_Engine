@@ -1,8 +1,8 @@
 import torch
 import tqdm
-import create_summary as create_summary
 import copy
-import modules.data_loader as data_loader
+import create_summary 
+import data_loader
 
 from torch import nn, optim
 from torch.utils.tensorboard import SummaryWriter
