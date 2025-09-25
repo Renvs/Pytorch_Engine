@@ -1,6 +1,7 @@
 import torch
 import tqdm
 import create_summary as create_summary
+import copy
 
 from torch import nn, optim
 from torch.utils.tensorboard import SummaryWriter
@@ -138,7 +139,8 @@ def summary_writer_addon(
         batch_size: int, 
         image_size: int,
         writer: create_summary,
-        device: str = device
+        device: str = device,
+        patience: int = 10
 ) -> Dict[str, List]:
 
     result = {
@@ -149,6 +151,9 @@ def summary_writer_addon(
         }
     
     model.to(device)
+    best_loss = float('inf'),
+    patience_counter = 0
+    best_weights = None
 
     for epoch in tqdm(range(epochs)):
 
@@ -172,12 +177,25 @@ def summary_writer_addon(
             accuracy=accuracy,
             device=device
         )
-        print(f"Test loss: {test_loss:.4f} | Test accuracy: {test_acc * 100:.3f}%")
+        print(f"Test loss: {test_loss:.4f} | Test accuracy: {test_acc * 100:.3f}%\n")
 
         result['train_loss'].append(train_loss)
         result['train_acc'].append(train_acc.item())
         result['test_loss'].append(test_loss)
         result['test_acc'].append(test_acc.item())
+
+        if test_loss < best_loss:
+            best_loss = test_loss
+            patience_counter = 0
+            best_weights = copy.deepcopy(model.state_dict())
+            print(f'Save best weights with loss: {test_loss:.4f}')
+        else:
+            patience_counter += 1
+            print(f'No improvement. Patience counter: {patience_counter}/{patience}')
+
+        if patience_counter >= patience:
+            print(f'Early stopping triggered after {patience} epochs without improvement.')
+            break
 
         if writer:
             
@@ -192,6 +210,9 @@ def summary_writer_addon(
                 tag_scalar_dict= {'train_accuracy': train_acc, 'test_accuracy': test_acc}, 
                 global_step= epoch
             )
+
+        if best_weights is not None:
+            model.load_state_dict(best_weights)
         
     writer.add_graph(model=model, 
                      input_to_model= torch.randn(batch_size, 3, image_size, image_size).to(device))
