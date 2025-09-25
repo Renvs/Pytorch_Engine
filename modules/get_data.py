@@ -52,9 +52,11 @@ def get_data(url: str, data_path: str, save_path: str, filename: str = None):
 
     return train_dir, test_dir, model_path
 
-def save_models(model: 'nn.Module', model_path: str, model_name: str):
+def save_models(model: 'nn.Module', model_path: Path, model_name: str):
+    model_path.mkdir(parents=True, exist_ok=True)
+    save_path = model_path / f'{model_name}.pt'
     try:
-        torch.save(model.state_dict(), model_path / f'{model_name}.pt')
+        torch.save(model.state_dict(), save_path)
         print(f'[INFO] Model saved at {model_path} / {model_name}.pt')
     except Exception as e:
         print(f"[ERROR] Failed to save model: {e}")
