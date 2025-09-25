@@ -56,7 +56,7 @@ def save_models(model: nn.Module, save_path: Path, model_name: str):
     target_path = Path(save_path)
     target_path.mkdir(parents=True, exist_ok=True)
 
-    model_path = save_path / f'{model_name}.pt'
+    model_path = target_path / f'{model_name}.pt'
 
     try:
 
