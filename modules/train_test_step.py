@@ -134,13 +134,9 @@ def train( model: nn.Module,
             print(f'Early stopping triggered after {patience} epochs without improvement.')
             break
 
-        if best_weights is not None:
-            model.load_state_dict(best_weights)
-
-    if current_min_loss < best_loss:
-        best_loss = current_min_loss
-        get_data.save_models(model.state_dict(), model_path, model_name)
-        print(f'Save at {model_path} Loss: {current_min_loss:.4f}')
+    if best_weights is not None:
+        model.load_state_dict(best_weights)
+        get_data.save_models(model, model_path, model_name)
 
     print(f"best_train_loss = {min(result['train_loss'])}")
     print(f"best_train_acc = {max(result['train_acc'])}")
@@ -238,17 +234,13 @@ def summary_writer_addon(
                 global_step= epoch
             )
 
-        if best_weights is not None:
-            model.load_state_dict(best_weights)
+    if best_weights is not None:
+        model.load_state_dict(best_weights)
+        get_data.save_models(model, model_path, model_name)
         
     writer.add_graph(model=model, 
                      input_to_model= torch.randn(batch_size, 3, image_size, image_size).to(device))
     writer.close()
-
-    if current_min_loss < best_loss:
-        best_loss = current_min_loss
-        get_data.save_models(model.state_dict(), model_path, model_name)
-        print(f'Save at {model_path} Loss: {current_min_loss:.4f}')
 
     print(f"\nbest_train_loss = {min(result['train_loss'])}")
     print(f"best_train_acc = {max(result['train_acc'])}")
