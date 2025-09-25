@@ -51,9 +51,10 @@ def data_from_url(url: str, data_path: str, save_path: str, filename: str = None
 
     return train_dir, test_dir
 
-def save_models(model: 'nn.Module',save_path: Path, model_name: str):
+def save_models(model: nn.Module, save_path: Path, model_name: str):
 
-    save_path.mkdir(parents=True, exist_ok=True)
+    target_path = Path(save_path)
+    target_path.mkdir(parents=True, exist_ok=True)
 
     model_path = save_path / f'{model_name}.pt'
 
