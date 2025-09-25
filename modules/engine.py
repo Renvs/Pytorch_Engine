@@ -12,6 +12,7 @@ NUM_WORKERS = os.cpu_count()
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 def feature_extraction(model: nn.Module,
+                       classifier_name: str, 
                        file_name: str, 
                        data_path: str, 
                        save_path: str,
@@ -19,12 +20,15 @@ def feature_extraction(model: nn.Module,
                        weight: models,
                        batch_size: int,
                        loss_fn: nn.Module,
-                       optimizer: optim.Optimizer,
-                       scheduler: optim.lr_scheduler,
+                       optimizer,
                        learning_rate: float, 
+                       w_decay: float,
+                       patience:int,
+                       img_size: Tuple[int, int],
                        accuracy,
                        device: str = device,
                        num_workers: int = NUM_WORKERS,
+                       warm_epochs: int = 4,
                        epochs: int = 10,
                        ):
     
@@ -39,31 +43,57 @@ def feature_extraction(model: nn.Module,
 
     print('[INFO] Preparing Dataloader')
     train_dataloader, test_dataloader, class_names = data_setup.load_dataloader(
-        train_dir, test_dir, weight, batch_size, num_workers
+        train_dir, test_dir, batch_size, weight, img_size, num_workers
     )
 
     # ==== Prep The Model ====
 
     print('[INFO] Preparing Model Classifier')
 
-    crop_size = weight.transforms().crop_size[0]
-
     model = model.to(device)
 
-    original_classifier = model.classifier
-    dropout_layer = original_classifier[0]
-    dropout_p = dropout_layer.p
-    dropout_inplace = dropout_layer.inplace
-
-    for params in model.features.parameters():
+    for params in model.parameters():
         params.requires_grad = False
 
-    model.classifier = nn.Sequential(
-        nn.Dropout(p=dropout_p, inplace=dropout_inplace),
-        nn.Linear(in_features= model.classifier[1].in_features, out_features= len(class_names)),
-    )
+    original_classifier = helper.get_nested_attr(model, classifier_name)
+    in_features = None
+    is_conv_layer = False
 
-    print(f'[INFO] {model.classifier[1].in_features}')
+    if isinstance(original_classifier, nn.Linear):
+        in_features = original_classifier.in_features
+    elif isinstance(original_classifier, nn.Conv2d):
+        in_features = original_classifier.in_channels
+        is_conv_layer = True
+    else: 
+        for layer in reversed(list(original_classifier.modules())):
+            if isinstance(layer, nn.Linear):
+                in_features = layer.in_features
+                break
+            elif isinstance(layer, nn.Conv2d):
+                in_features = layer.in_channels
+                is_conv_layer = True
+                break
+
+    if in_features is None:
+        raise ValueError(f"Could not find Linear layer named '{classifier_name}' in the model")
+
+    if is_conv_layer:
+        new_classifier = nn.Conv2d(in_channels=in_features, out_channels=len(class_names), kernel_size=(1, 1), stride=(1, 1))
+    else:
+        new_classifier = nn.Linear(in_features=in_features, out_features=len(class_names))
+
+    helper.set_nested_attr(model, classifier_name, new_classifier)
+
+    new_params = [p for p in model.parameters() if p.requires_grad]
+    optimizer = optimizer(params=new_params, lr=learning_rate, weight_decay=w_decay)
+
+    main_scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer=optimizer, T_max=epochs - warm_epochs)
+    warmup_scheduler = optim.lr_scheduler.LinearLR(optimizer=optimizer, start_factor=0.1, total_iters=warm_epochs)
+    scheduler = optim.lr_scheduler.SequentialLR(
+        optimizer,
+        schedulers=[warmup_scheduler, main_scheduler],
+        milestones=[warm_epochs]
+    )
 
     # ==== Dummy Pass The Model
 
@@ -90,7 +120,8 @@ def feature_extraction(model: nn.Module,
         accuracy=accuracy,
         model_path=model_path,
         epochs=epochs,
-        device=device
+        device=device,
+        patience=patience
     )
 
     return result
@@ -110,6 +141,7 @@ def single_tracking(
         w_decay:float,
         accuracy,
         writer: SummaryWriter,
+        patience: int,
         img_size: Tuple[int, int] = None,
         device: str = device,
         num_workers: int = NUM_WORKERS,
@@ -207,7 +239,8 @@ def single_tracking(
         batch_size=batch_size,
         image_size=img_size[0],
         writer=writer,
-        device=device
+        device=device,
+        patience=patience
     )
 
     best_loss = float('inf')
@@ -234,6 +267,7 @@ def multiple_tracking(
   num_workers: int,
   save_path: str,    
   model_path: str,
+  patience: int,
   device: str = device ,
 ):
     
@@ -273,6 +307,7 @@ def multiple_tracking(
                     w_decay=w_decay,
                     accuracy=accuracy_fn,
                     writer=writer,
+                    patience=patience,
                     img_size=img_size,
                     device=device,
                     num_workers=num_workers,

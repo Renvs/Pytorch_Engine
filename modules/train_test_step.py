@@ -72,6 +72,7 @@ def train( model: nn.Module,
            accuracy,
            model_path: str,
            epochs: int,
+           patience: int,
            device: str = device
 ) -> Dict[str, List]:
     
@@ -83,8 +84,9 @@ def train( model: nn.Module,
         }
     
     model.to(device)
-
-    best_loss = float('inf')
+    best_loss = float('inf'),
+    patience_counter = 0
+    best_weights = None
 
     for epoch in tqdm(range(epochs)):
 
@@ -119,6 +121,22 @@ def train( model: nn.Module,
         result['train_acc'].append(train_acc.item())
         result['test_loss'].append(test_loss)
         result['test_acc'].append(test_acc.item())
+
+        if test_loss < best_loss:
+            best_loss = test_loss
+            patience_counter = 0
+            best_weights = copy.deepcopy(model.state_dict())
+            print(f'Save best weights with loss: {test_loss:.4f}')
+        else:
+            patience_counter += 1
+            print(f'No improvement. Patience counter: {patience_counter}/{patience}')
+
+        if patience_counter >= patience:
+            print(f'Early stopping triggered after {patience} epochs without improvement.')
+            break
+
+        if best_weights is not None:
+            model.load_state_dict(best_weights)
 
     print(f"best_train_loss = {min(result['train_loss'])}")
     print(f"best_train_acc = {max(result['train_acc'])}")
