@@ -54,12 +54,12 @@ def dataloader_from_zip(
 
 def get_dataloader(
         data_source: str or Callable,
-        weight,
         batch_size: int, 
         image_size: Tuple[int, int],
         data_path: str, 
         save_path: str,
         filename: str,
+        weight = None,
         num_workers: int = 0
 ):
     if isinstance(data_source, str):
