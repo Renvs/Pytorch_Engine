@@ -3,7 +3,7 @@ import os
 import torchvision
 import torchvision.models as models
 import copy
-import preprocessing, helper, create_summary, data_loader, train_test_step
+import modules.retrieve_data as retrieve_data, helper, create_summary, data_loader, train_test_step
 
 from torch.utils.tensorboard.writer import SummaryWriter
 from torchinfo import summary
@@ -47,14 +47,14 @@ def single_tracking(
 
     print('\n[INFO] Preparing Dataloader\n')
 
-    train_dataloader, test_dataloader, class_names = preprocessing.get_data(
+    train_dataloader, test_dataloader, class_names = retrieve_data.get_data(
         data_source=data_source,
-        weight=weight,
         batch_size=batch_size,
         image_size=img_size,
         data_path=data_path, 
         save_path=save_path,
         filename=file_name,
+        weight=weight,
         num_workers=num_workers
     )
 

@@ -2,7 +2,7 @@ import torch
 import matplotlib.pyplot as plt
 import random
 import numpy as np
-import preprocessing, data_loader
+import modules.retrieve_data as retrieve_data, data_loader
 import seaborn as sns
 
 from torch import nn
