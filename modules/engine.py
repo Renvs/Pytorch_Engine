@@ -47,7 +47,7 @@ def single_tracking(
 
     print('\n[INFO] Preparing Dataloader\n')
 
-    train_dataloader, test_dataloader, class_names = preprocessing.get_dataloader(
+    train_dataloader, test_dataloader, class_names = preprocessing.get_data(
         data_source=data_source,
         weight=weight,
         batch_size=batch_size,

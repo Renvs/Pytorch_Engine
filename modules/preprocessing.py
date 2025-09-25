@@ -52,7 +52,7 @@ def dataloader_from_zip(
     return train_dataloader, test_dataloader, n_classes
     
 
-def get_dataloader(
+def get_data(
         data_source: str or Callable,
         batch_size: int, 
         image_size: Tuple[int, int],
