@@ -3,7 +3,7 @@ import os
 import torchvision
 import torchvision.models as models
 import copy
-import modules.retrieve_data as retrieve_data, helper, create_summary, data_loader, train_test_step
+import retrieve_data, helper, create_summary, data_loader, train_test_step
 
 from torch.utils.tensorboard.writer import SummaryWriter
 from torchinfo import summary
