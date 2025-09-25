@@ -170,7 +170,7 @@ def summary_writer_addon(
         }
     
     model.to(device)
-    best_loss = float('inf'),
+    best_loss = float('inf')
     patience_counter = 0
     best_weights = None
 
