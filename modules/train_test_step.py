@@ -2,6 +2,7 @@ import torch
 import tqdm
 import create_summary as create_summary
 import copy
+import get_data
 
 from torch import nn, optim
 from torch.utils.tensorboard import SummaryWriter
@@ -64,6 +65,7 @@ def test_step( model: nn.Module,
     return test_loss, test_acc
 
 def train( model: nn.Module,
+           model_name: str,
            train_data: torch.utils.data.DataLoader, 
            test_data: torch.utils.data.DataLoader,
            loss_fn: nn.Module, 
@@ -112,10 +114,6 @@ def train( model: nn.Module,
         )
         print(f"Test loss: {test_loss:.4f} | Test accuracy: {test_acc * 100:.3f}%")
 
-        if test_loss < best_loss:
-            best_loss = test_loss
-            torch.save(model.state_dict(), model_path)
-            print(f'Save at {model_path} Loss: {test_loss:.4f}')
 
         result['train_loss'].append(train_loss)
         result['train_acc'].append(train_acc.item())
@@ -139,6 +137,11 @@ def train( model: nn.Module,
         if best_weights is not None:
             model.load_state_dict(best_weights)
 
+        if current_min_loss < best_loss:
+            best_loss = current_min_loss
+            get_data.save_models(model.state_dict(), model_path, model_name)
+            print(f'Save at {model_path} Loss: {current_min_loss:.4f}')
+
     print(f"best_train_loss = {min(result['train_loss'])}")
     print(f"best_train_acc = {max(result['train_acc'])}")
     print(f"best_test_loss = {min(result['test_loss'])}")
@@ -148,6 +151,8 @@ def train( model: nn.Module,
 
 def summary_writer_addon(
         model: nn.Module,
+        model_name: str,
+        model_path: str,
         train_data: torch.utils.data.DataLoader, 
         test_data: torch.utils.data.DataLoader,
         loss_fn: nn.Module, 
@@ -204,6 +209,7 @@ def summary_writer_addon(
         result['test_acc'].append(test_acc.item())
 
         current_min_loss = min(result['test_loss'])
+
         if current_min_loss < best_loss:
             best_loss = current_min_loss
             patience_counter = 0
@@ -216,6 +222,11 @@ def summary_writer_addon(
         if patience_counter >= patience:
             print(f'Early stopping triggered after {patience} epochs without improvement.')
             break
+
+        if current_min_loss < best_loss:
+            best_loss = current_min_loss
+            get_data.save_models(model.state_dict(), model_path, model_name)
+            print(f'Save at {model_path} Loss: {current_min_loss:.4f}')
 
         if writer:
             

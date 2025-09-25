@@ -37,7 +37,7 @@ def feature_extraction(model: nn.Module,
 
     print('[INFO] Getting Data')
     train_dir, test_dir, model_path = get_data.get_data(
-        model_name=model_name, url= url, data_path= data_path, save_path= save_path, filename= file_name
+        url= url, data_path= data_path, save_path= save_path, filename= file_name
     )
 
     # ==== Prep The Data ====
@@ -100,7 +100,7 @@ def feature_extraction(model: nn.Module,
 
     dummy_test = summary(
         model, 
-        input_size= (1, 3, crop_size, crop_size),
+        input_size= (1, 3, img_size[0], img_size[1]),
         col_names= ['input_size', 'output_size', 'num_params', 'trainable'],
         col_width= 20,
         row_settings=['var_names']
@@ -154,7 +154,7 @@ def single_tracking(
 
     print('\n[INFO] Getting Data\n')
     train_dir, test_dir, model_path = get_data.get_data(
-        model_name=model_name, url= url, data_path= data_path, save_path= save_path, filename= file_name
+        url= url, data_path= data_path, save_path= save_path, filename= file_name
     )
 
     # ==== Prep The Data ====
@@ -231,6 +231,8 @@ def single_tracking(
 
     result = train_test_step.summary_writer_addon(
         model=model, 
+        model_name=model_name, 
+        model_path=model_path,
         train_data=train_dataloader,
         test_data=test_dataloader,
         loss_fn=loss_fn,
@@ -244,15 +246,6 @@ def single_tracking(
         device=device,
         patience=patience
     )
-
-    best_loss = float('inf')
-
-    current_min_loss = min(result['test_loss'])
-
-    if current_min_loss < best_loss:
-        best_loss = current_min_loss
-        torch.save(model.state_dict().copy(), model_path)
-        print(f'Save at {model_path} Loss: {min(result["test_loss"]):.4f}')
 
     return result
 

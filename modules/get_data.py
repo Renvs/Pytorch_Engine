@@ -1,16 +1,18 @@
+import torch
+import torch.nn as nn
 import requests
 import zipfile
 import os
 
 from pathlib import Path
 
-def get_data(model_name: str,url: str, data_path: str, save_path: str, filename: str = None):
+def get_data(url: str, data_path: str, save_path: str, filename: str = None):
     try:
         if save_path is not None:
             print(f'[INFO] Checking Directory at {save_path}')
             save_path = Path(save_path)
             save_path.mkdir(parents=True, exist_ok=True)
-            model_path = save_path / model_name
+            model_path = save_path 
 
         if data_path is not None and filename is not None:
             print(f'[INFO] Checking Directory at {data_path}')
@@ -49,3 +51,10 @@ def get_data(model_name: str,url: str, data_path: str, save_path: str, filename:
     test_dir = file_path / 'test'
 
     return train_dir, test_dir, model_path
+
+def save_models(model: 'nn.Module', model_path: str, model_name: str):
+    try:
+        torch.save(model.state_dict(), model_path / f'{model_name}.pt')
+        print(f'[INFO] Model saved at {model_path} / {model_name}.pt')
+    except Exception as e:
+        print(f"[ERROR] Failed to save model: {e}")
