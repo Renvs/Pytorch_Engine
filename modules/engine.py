@@ -2,8 +2,8 @@ import torch
 import os
 import torchvision
 import torchvision.models as models
-import modules.preprocessing as preprocessing, modules.data_loader as data_loader, train_test_step, create_summary, helper
 import copy
+import preprocessing, helper, create_summary, data_loader, train_test_step
 
 from torch.utils.tensorboard.writer import SummaryWriter
 from torchinfo import summary
