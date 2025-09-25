@@ -122,11 +122,12 @@ def train( model: nn.Module,
         result['test_loss'].append(test_loss)
         result['test_acc'].append(test_acc.item())
 
-        if test_loss < best_loss:
-            best_loss = test_loss
+        current_min_loss = min(result['test_loss'])
+        if current_min_loss < best_loss:
+            best_loss = current_min_loss
             patience_counter = 0
             best_weights = copy.deepcopy(model.state_dict())
-            print(f'Save best weights with loss: {test_loss:.4f}')
+            print(f'Save best weights with loss: {current_min_loss:.4f}')
         else:
             patience_counter += 1
             print(f'No improvement. Patience counter: {patience_counter}/{patience}')
@@ -202,11 +203,12 @@ def summary_writer_addon(
         result['test_loss'].append(test_loss)
         result['test_acc'].append(test_acc.item())
 
-        if test_loss < best_loss:
-            best_loss = test_loss
+        current_min_loss = min(result['test_loss'])
+        if current_min_loss < best_loss:
+            best_loss = current_min_loss
             patience_counter = 0
             best_weights = copy.deepcopy(model.state_dict())
-            print(f'Save best weights with loss: {test_loss:.4f}')
+            print(f'Save best weights with loss: {current_min_loss:.4f}')
         else:
             patience_counter += 1
             print(f'No improvement. Patience counter: {patience_counter}/{patience}')
