@@ -6,13 +6,12 @@ import os
 
 from pathlib import Path
 
-def get_data(url: str, data_path: str, save_path: str, filename: str = None):
+def data_from_url(url: str, data_path: str, save_path: str, filename: str = None):
     try:
         if save_path is not None:
             print(f'[INFO] Checking Directory at {save_path}')
             save_path = Path(save_path)
             save_path.mkdir(parents=True, exist_ok=True)
-            model_path = save_path 
 
         if data_path is not None and filename is not None:
             print(f'[INFO] Checking Directory at {data_path}')
@@ -22,7 +21,7 @@ def get_data(url: str, data_path: str, save_path: str, filename: str = None):
 
             if url is not None:
                 with open(file_path.with_suffix('.zip'), 'wb') as f:        
-                    print(f'[INFO] Downloading fRom {url} at {file_path}')
+                    print(f'[INFO] Downloading from {url} at {file_path}')
                     request = requests.get(url, stream=True)
                     f.write(request.content)
             else: 
@@ -50,13 +49,19 @@ def get_data(url: str, data_path: str, save_path: str, filename: str = None):
     train_dir = file_path / 'train'
     test_dir = file_path / 'test'
 
-    return train_dir, test_dir, model_path
+    return train_dir, test_dir
 
-def save_models(model: 'nn.Module', model_path: Path, model_name: str):
-    model_path.mkdir(parents=True, exist_ok=True)
-    save_path = model_path / f'{model_name}.pt'
+def save_models(model: 'nn.Module',save_path: Path, model_name: str):
+
+    save_path.mkdir(parents=True, exist_ok=True)
+
+    model_path = save_path / f'{model_name}.pt'
+
     try:
-        torch.save(model.state_dict(), save_path)
+
+        torch.save(model.state_dict(), model_path)
         print(f'[INFO] Model saved at {model_path} / {model_name}.pt')
+
     except Exception as e:
+        
         print(f"[ERROR] Failed to save model: {e}")

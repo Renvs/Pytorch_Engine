@@ -2,7 +2,7 @@ import torch
 import tqdm
 import create_summary as create_summary
 import copy
-import get_data
+import modules.data_loader as data_loader
 
 from torch import nn, optim
 from torch.utils.tensorboard import SummaryWriter
@@ -12,7 +12,7 @@ from typing import Tuple, List, Dict
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 def train_step(model: nn.Module,
-               train_data: torch.utils.data.DataLoader,
+               train_data: torch.utils.data.Dataset,
                loss_fn: nn.Module, 
                optimizer: optim.Optimizer,
                scheduler: optim.lr_scheduler,
@@ -42,7 +42,7 @@ def train_step(model: nn.Module,
     return train_loss, train_acc
 
 def test_step( model: nn.Module,
-               test_data: torch.utils.data.DataLoader,
+               test_data: torch.utils.data.Dataset,
                loss_fn: nn.Module, 
                accuracy,
                device: str = device 
@@ -66,8 +66,8 @@ def test_step( model: nn.Module,
 
 def train( model: nn.Module,
            model_name: str,
-           train_data: torch.utils.data.DataLoader, 
-           test_data: torch.utils.data.DataLoader,
+           train_data: torch.utils.data.Dataset, 
+           test_data: torch.utils.data.Dataset,
            loss_fn: nn.Module, 
            optimizer: optim.Optimizer, 
            scheduler: optim.lr_scheduler,
@@ -136,7 +136,7 @@ def train( model: nn.Module,
 
     if best_weights is not None:
         model.load_state_dict(best_weights)
-        get_data.save_models(model, model_path, model_name)
+        data_loader.save_models(model, model_path, model_name)
 
     print(f"best_train_loss = {min(result['train_loss'])}")
     print(f"best_train_acc = {max(result['train_acc'])}")
@@ -149,8 +149,8 @@ def summary_writer_addon(
         model: nn.Module,
         model_name: str,
         model_path: str,
-        train_data: torch.utils.data.DataLoader, 
-        test_data: torch.utils.data.DataLoader,
+        train_data: torch.utils.data.Dataset, 
+        test_data: torch.utils.data.Dataset,
         loss_fn: nn.Module, 
         optimizer: optim.Optimizer, 
         scheduler: optim.lr_scheduler,
@@ -236,7 +236,7 @@ def summary_writer_addon(
 
     if best_weights is not None:
         model.load_state_dict(best_weights)
-        get_data.save_models(model, model_path, model_name)
+        data_loader.save_models(model, model_path, model_name)
         
     writer.add_graph(model=model, 
                      input_to_model= torch.randn(batch_size, 3, image_size, image_size).to(device))
