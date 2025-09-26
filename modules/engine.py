@@ -100,7 +100,7 @@ def fine_tuning(
 
     base_params = [p for name, p in model.named_parameters() if not name.startswith(classifier_name)]
 
-    optimizer = (
+    optimizer = optimizer_class(
         [
             {'params': base_params, 'lr': learning_rate * 0.1},
             {'params': new_classifier.parameters(), 'lr': learning_rate}
