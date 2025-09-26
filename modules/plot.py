@@ -186,6 +186,9 @@ def plot_dataset(
                 all_images.append(batch_images[i].cpu())
                 all_labels.append(batch_labels[i].item())
 
+            if len(all_images) >= n_images:
+                break
+
     if n_images > len(all_images):
         print(f"Warning: Requested {n_images} images but dataset only has {len(all_images)}. Using all available images.")
         n_images = len(all_images)
