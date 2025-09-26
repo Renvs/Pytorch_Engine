@@ -241,11 +241,16 @@ def summary_writer_addon(
         
     model.eval()
 
-    writer.add_graph(model=model, 
-                     input_to_model= torch.randn(batch_size, 3, image_size, image_size).to(device),
-                     use_strict_trace=False)
-    writer.close()
-
+    if writer:
+            try:
+                dummy_input = torch.randn(batch_size, 3, image_size, image_size).to(device)
+                scripted_model = torch.jit.script(model)
+                writer.add_graph(scripted_model, dummy_input)
+            except Exception as e:
+                print(f"⚠️ Skipping add_graph due to TorchScript error: {e}")
+            finally:
+                writer.close()
+                
     print(f"\nbest_train_loss = {min(result['train_loss'])}")
     print(f"best_train_acc = {max(result['train_acc'])}")
     print(f"best_test_loss = {min(result['test_loss'])}")
