@@ -14,7 +14,145 @@ NUM_WORKERS = os.cpu_count()
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 
-def single_tracking(
+def fine_tuning(
+        # ==== Model Params ====
+        model: nn.Module,
+        model_name: str,
+        classifier_name: str,
+        weight,
+
+        # ==== Data Params ====
+        file_name: str, 
+        data_path: str, 
+        save_path: str,
+        data_source: str or torchvision.datasets.VisionDataset, 
+        batch_size: int,
+        img_size: Tuple[int, int],
+
+        # ==== Training Params ====
+        loss_fn: nn.Module,
+        optimizer_class,
+        learning_rate:float,
+        w_decay:float,
+        accuracy,
+        writer: SummaryWriter,
+        patience: int,
+        device: str = device,
+        num_workers: int = NUM_WORKERS,
+        epochs: int = 10,
+        warm_epochs: int = 0
+):  
+
+    # ==== Get The Data & Preprocessing The Data ====
+
+    print('\n[INFO] Preparing Dataloader\n')
+
+    train_dataloader, test_dataloader, class_names = retrieve_data.get_data(
+        data_source=data_source,
+        batch_size=batch_size,
+        image_size=img_size,
+        data_path=data_path, 
+        save_path=save_path,
+        filename=file_name,
+        weight=weight,
+        num_workers=num_workers
+    )
+
+    # ==== Prep The Model ====
+
+    print('\n[INFO] Preparing Model Classifier\n')
+
+    model = model.to(device)
+
+    original_classifier = helper.get_nested_attr(model, classifier_name)
+
+    in_features = None
+
+    is_conv_layer = False
+
+    if isinstance(original_classifier, nn.Linear):
+        in_features = original_classifier.in_features
+
+    elif isinstance(original_classifier, nn.Conv2d):
+        in_features = original_classifier.in_channels
+        is_conv_layer = True
+
+    else: 
+        for layer in reversed(list(original_classifier.modules())):
+            if isinstance(layer, nn.Linear):
+                in_features = layer.in_features
+                break
+
+            elif isinstance(layer, nn.Conv2d):
+                in_features = layer.in_channels
+                is_conv_layer = True
+                break
+
+    if in_features is None:
+        raise ValueError(f"Could not find Linear layer named '{classifier_name}' in the model")
+
+    if is_conv_layer:
+        new_classifier = nn.Conv2d(in_channels=in_features, out_channels=len(class_names), kernel_size=(1, 1), stride=(1, 1))
+    else:
+        new_classifier = nn.Linear(in_features=in_features, out_features=len(class_names))
+
+    helper.set_nested_attr(model, classifier_name, new_classifier)
+
+    base_params = [p for name, p in model.named_parameters() if not name.startswith(classifier_name)]
+
+    optimizer = (
+        [
+            {'params': base_params, 'lr': learning_rate * 0.1},
+            {'params': new_classifier.parameters(), 'lr': learning_rate}
+        ],
+        weight_decay = w_decay
+    )
+
+    main_scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer=optimizer, T_max=epochs - warm_epochs)
+    warmup_scheduler = optim.lr_scheduler.LinearLR(optimizer=optimizer, start_factor=0.1, total_iters=warm_epochs)
+    scheduler = optim.lr_scheduler.SequentialLR(
+        optimizer,
+        schedulers=[warmup_scheduler, main_scheduler],
+        milestones=[warm_epochs]
+    )
+
+    # ==== Dummy Pass The Model
+
+    dummy_test = summary(
+        model, 
+        input_size= (1, 3, img_size[0], img_size[1]),
+        col_names= ['input_size', 'output_size', 'num_params', 'trainable'],
+        col_width= 20,
+        row_settings=['var_names']
+    )
+
+    print(dummy_test)
+
+    accuracy = accuracy.to(device)
+        
+    # ==== Train The Model ====
+
+    result = train_test_step.summary_writer_addon(
+        model=model, 
+        model_name=model_name, 
+        model_path=save_path,
+        train_data=train_dataloader,
+        test_data=test_dataloader,
+        loss_fn=loss_fn,
+        optimizer=optimizer,
+        scheduler=scheduler,
+        accuracy=accuracy,
+        epochs=epochs,
+        batch_size=batch_size,
+        image_size=img_size[0],
+        writer=writer,
+        device=device,
+        patience=patience
+    )
+
+    return result
+
+def feature_extraction(
         # ==== Model Params ====
         model: nn.Module,
         model_name: str,
@@ -186,7 +324,7 @@ def multiple_tracking(
                     f'{model_name}', f'{epoch}_epoch', f'{data_name}'
                 )
 
-                experiment_result = single_tracking(
+                experiment_result = feature_extraction(
                     model=model,
                     model_name=model_name,
                     classifier_name=classifier,
