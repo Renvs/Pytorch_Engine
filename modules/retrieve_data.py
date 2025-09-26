@@ -2,6 +2,7 @@ import torchvision
 import os
 import torch
 import data_loader as dt
+import inspect
 
 from torch.utils.data import DataLoader
 from torchvision import datasets
@@ -61,7 +62,7 @@ def get_data(
         filename: str,
         weight = None,
         num_workers: int = 0
-):
+):  
     if isinstance(data_source, str):
         print(f'[INFO] Getting data from URL: {data_source} ')
         train_dir, test_dir= dt.data_from_url(
@@ -83,21 +84,47 @@ def get_data(
     elif issubclass(data_source, VisionDataset):
         print(f'\n[INFO] Getting data from torchvision datasets: {data_source.__name__}')
 
+        sig = inspect.signature(data_source.__init__)
         transform = weight.transforms()
 
-        train_dataset = data_source(
-            root=data_path,
-            train=True,
-            transform=transform,
-            download=True, 
-        )
+        if 'split' in sig.parameters:
+            
+            print(f'[INFO] Using split parameters')
+            train_dataset = data_source(
+                root=data_path,
+                split='train',
+                transform=transform,
+                download=True, 
+                target_transform=None
+            )
 
-        test_dataset = data_source(
-            root=data_path,
-            train=False,
-            transform=transform,
-            download=True, 
-        )
+            test_dataset = data_source(
+                root=data_path,
+                split='test',
+                transform=transform,
+                download=True, 
+                target_transform=None
+            )
+        elif 'train' in sig.parameters:
+
+            print(f'[INFO] Using train | test parameters')
+            train_dataset = data_source(
+                root=data_path,
+                train=True,
+                transform=transform,
+                download=True, 
+                target_transform=None
+            )
+
+            test_dataset = data_source(
+                root=data_path,
+                train=False,
+                transform=transform,
+                download=True, 
+                target_transform=None
+            )
+        else:
+            raise ValueError('[ERROR] The dataset class does not have the expected parameters (split or train)')
 
         n_classes = train_dataset.classes
 
@@ -110,9 +137,9 @@ def get_data(
         )
 
         test_dataloader = DataLoader(
-            train_dataset,
+            test_dataset,
             batch_size,
-            True,
+            False,
             num_workers=NUM_WORKERS,
             pin_memory=True
         )
