@@ -242,7 +242,8 @@ def summary_writer_addon(
     model.eval()
 
     writer.add_graph(model=model, 
-                     input_to_model= torch.randn(batch_size, len(n_class), image_size, image_size).to(device))
+                     input_to_model= torch.randn(batch_size, 3, image_size, image_size).to(device),
+                     use_strict_trace=False)
     writer.close()
 
     print(f"\nbest_train_loss = {min(result['train_loss'])}")
