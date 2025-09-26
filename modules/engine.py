@@ -13,8 +13,7 @@ from typing import Tuple, Dict, List
 NUM_WORKERS = os.cpu_count()
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-
-def fine_tuning(
+def finetuning(
         # ==== Model Params ====
         model: nn.Module,
         model_name: str,
