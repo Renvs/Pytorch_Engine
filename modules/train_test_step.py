@@ -238,6 +238,8 @@ def summary_writer_addon(
         model.load_state_dict(best_weights)
         data_loader.save_models(model, model_path, model_name)
         
+    model.eval()
+    
     writer.add_graph(model=model, 
                      input_to_model= torch.randn(batch_size, 3, image_size, image_size).to(device))
     writer.close()
