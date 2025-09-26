@@ -145,6 +145,7 @@ def finetuning(
         batch_size=batch_size,
         image_size=img_size[0],
         writer=writer,
+        c_class=class_names,
         device=device,
         patience=patience
     )
@@ -279,6 +280,7 @@ def feature_extraction(
         batch_size=batch_size,
         image_size=img_size[0],
         writer=writer,
+        n_class=class_names,
         device=device,
         patience=patience
     )

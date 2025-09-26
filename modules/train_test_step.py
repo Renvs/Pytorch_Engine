@@ -159,6 +159,7 @@ def summary_writer_addon(
         batch_size: int, 
         image_size: int,
         writer: create_summary,
+        n_class,
         device: str = device,
         patience: int = 10
 ) -> Dict[str, List]:
@@ -239,9 +240,9 @@ def summary_writer_addon(
         data_loader.save_models(model, model_path, model_name)
         
     model.eval()
-    
+
     writer.add_graph(model=model, 
-                     input_to_model= torch.randn(batch_size, 3, image_size, image_size).to(device))
+                     input_to_model= torch.randn(batch_size, len(n_class), image_size, image_size).to(device))
     writer.close()
 
     print(f"\nbest_train_loss = {min(result['train_loss'])}")
