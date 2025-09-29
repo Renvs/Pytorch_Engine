@@ -62,24 +62,6 @@ def dataset_prediction(
     device: str,
 ):
 
-    all_images = []
-    all_labels = []
-    
-    with torch.inference_mode():
-        for batch_images, batch_labels in test_data:
-            for i in range(batch_images.size(0)):
-                all_images.append(batch_images[i].cpu())
-                all_labels.append(batch_labels[i].item())
-
-            if len(all_images) >= images_num:
-                break
-    
-    if images_num > len(all_images):
-        print(f"Warning: Requested {images_num} images but dataset only has {len(all_images)}. Using all available images.")
-        images_num = len(all_images)
-    
-    sampled_indices = random.sample(range(len(all_images)), images_num)
-    
     images = []
     true_labels = []
     pred_labels = []
@@ -88,6 +70,8 @@ def dataset_prediction(
     
     model.to(device)
     model.eval()
+
+    images_counter = 0
     
     with torch.inference_mode():
         for batch_images, batch_labels in test_data:
@@ -98,21 +82,35 @@ def dataset_prediction(
             
             logits = model(batch_images)
             preds = torch.softmax(logits, dim=1)
-            pred_label = torch.argmax(preds, dim=1).cpu().item()
-            
-            images.append(image)
-            true_labels.append(true_label)
-            pred_labels.append(pred_label)
-            preds_score.append(preds.max().cpu().item())
+            pred_label_batch = torch.argmax(preds, dim=1)
+            pred_scores_batch = torch.max(preds, dim=1).values
 
             end_time = timer()
+            batch_time = end_time - start_time
+            avg_image_time = batch_time / batch_images.size(0)
 
-            total_time.append(end_time - start_time)
+            for i in range(batch_images.size(0)):
+                if images_counter >= images_num:
+                    break
+                
+                images.append(batch_images[i].cpu())
+                true_labels.append(batch_labels[i].item())
+                pred_labels.append(pred_label_batch[i].item())
+                preds_score.append(pred_scores_batch[i].item())
+                total_time.append(avg_image_time)
+
+                images_counter += 1
+
+            if images_counter >= images_num:
+                break
+
+    if images_counter < images_num:
+        print(f"Warning: Only {images_counter} images were found in the dataset. Requested {images_num}.")
+        images_num = images_counter
 
     avg_time = np.mean(total_time)
-    prediction_time = sum(total_time)
-    prediction_time_image_dt = pd.DataFrame(total_time)
-    prediction_time_image_dt.head()
+    prediction_time = np.sum(total_time)
+    prediction_time_image_dt = pd.DataFrame(total_time, columns=['Prediction Time'])
 
     print(f"Average prediction time per image: {avg_time:.4f} seconds |\nTotal prediction time for {images_num} images: {prediction_time:.4f} seconds")
 
