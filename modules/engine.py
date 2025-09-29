@@ -109,8 +109,8 @@ def fine_tuning(
         weight_decay = w_decay
     )
 
-    main_scheduler = scheduler(optimizer=optimizer, T_max=epochs - warm_epochs)
-    warmup_scheduler = warmup_scheduler(optimizer=optimizer, start_factor=0.1, total_iters=warm_epochs)
+    main_scheduler = scheduler
+    warmup_scheduler = warmup_scheduler
     scheduler = optim.lr_scheduler.SequentialLR(
         optimizer,
         schedulers=[warmup_scheduler, main_scheduler],
@@ -246,8 +246,8 @@ def feature_extraction(
     new_params = [p for p in model.parameters() if p.requires_grad]
     optimizer = optimizer_class(params=new_params, lr=learning_rate, weight_decay=w_decay)
 
-    main_scheduler = scheduler(optimizer=optimizer, T_max=epochs - warm_epochs)
-    warmup_scheduler = warmup_scheduler(optimizer=optimizer, start_factor=0.1, total_iters=warm_epochs)
+    main_scheduler = scheduler
+    warmup_scheduler = warmup_scheduler
     scheduler = optim.lr_scheduler.SequentialLR(
         optimizer,
         schedulers=[warmup_scheduler, main_scheduler],
