@@ -3,7 +3,9 @@ import tqdm
 import copy
 import create_summary 
 import data_loader
+import timeit
 
+from timeit import default_timer as timer
 from torch import nn, optim
 from torch.utils.tensorboard import SummaryWriter
 from tqdm.auto import tqdm
@@ -176,9 +178,11 @@ def summary_writer_addon(
     patience_counter = 0
     best_weights = None
 
+    start_time = timer()
+
     for epoch in tqdm(range(epochs)):
 
-        print(f"Epoch {epoch + 1}/{epochs}\n")
+        print(f"\nEpoch {epoch + 1}/{epochs}\n")
         
         train_loss, train_acc = train_step(
             model=model, 
@@ -189,7 +193,6 @@ def summary_writer_addon(
             accuracy=accuracy,
             device=device
         )
-        print(f"Train loss: {train_loss:.4f} | Train accuracy: {train_acc * 100:.3f}%")
 
         test_loss, test_acc = test_step(
             model=model,
@@ -198,7 +201,7 @@ def summary_writer_addon(
             accuracy=accuracy,
             device=device
         )
-        print(f"Test loss: {test_loss:.4f} | Test accuracy: {test_acc * 100:.3f}%\n")
+        print(f"Train loss: {train_loss:.4f} | Train accuracy: {train_acc * 100:.3f}% |\nTest loss: {test_loss:.4f} | Test accuracy: {test_acc * 100:.3f}%\n")
 
         result['train_loss'].append(train_loss)
         result['train_acc'].append(train_acc.item())
@@ -212,6 +215,7 @@ def summary_writer_addon(
             patience_counter = 0
             best_weights = copy.deepcopy(model.state_dict())
             print(f'Save best weights with loss: {current_min_loss:.4f}')
+            torch.save(model.state_dict(), f'\nSave best model at {model_path}/best_model.pt')
         else:
             patience_counter += 1
             print(f'No improvement. Patience counter: {patience_counter}/{patience}')
@@ -234,6 +238,8 @@ def summary_writer_addon(
                 tag_scalar_dict= {'train_accuracy': train_acc, 'test_accuracy': test_acc}, 
                 global_step= epoch
             )
+    
+    end_time = timer()
 
     if best_weights is not None:
         model.load_state_dict(best_weights)
@@ -255,5 +261,7 @@ def summary_writer_addon(
     print(f"best_train_acc = {max(result['train_acc'])}")
     print(f"best_test_loss = {min(result['test_loss'])}")
     print(f"best_test_acc = {max(result['test_acc'])}\n")
+
+    print(f"Total training time: {end_time - start_time:.3f} seconds")
 
     return result

@@ -3,7 +3,10 @@ import matplotlib.pyplot as plt
 import random
 import numpy as np
 import seaborn as sns
+import timeit 
+import pandas as pd
 
+from timeit import default_timer as timer
 from torch import nn
 from typing import Tuple, List, Dict
 from PIL import Image
@@ -33,12 +36,18 @@ def images_prediction(
 
     model.to(device)
     model.eval()
+
+    start_time = timer()
+
     with torch.inference_mode():
 
         transformed_image = images_transform(pre_images).unsqueeze(0)
         logits = model(transformed_image.to(device))
         preds = torch.softmax(logits, dim=1)
         label = torch.argmax(preds, dim=1)
+
+    end_time = timer()
+    print(f"Time taken for prediction: {end_time - start_time:.4f} seconds")
     
     plt.figure()
     plt.imshow(pre_images)
@@ -52,8 +61,6 @@ def dataset_prediction(
     images_num: int, 
     device: str,
 ):
-    model.to(device)
-    model.eval()
 
     all_images = []
     all_labels = []
@@ -63,6 +70,9 @@ def dataset_prediction(
             for i in range(batch_images.size(0)):
                 all_images.append(batch_images[i].cpu())
                 all_labels.append(batch_labels[i].item())
+
+            if len(all_images) >= images_num:
+                break
     
     if images_num > len(all_images):
         print(f"Warning: Requested {images_num} images but dataset only has {len(all_images)}. Using all available images.")
@@ -74,16 +84,19 @@ def dataset_prediction(
     true_labels = []
     pred_labels = []
     preds_score = []
+    total_time = []
     
-    # Make predictions for sampled images
+    model.to(device)
+    model.eval()
+    
     with torch.inference_mode():
-        for idx in sampled_indices:
-            image = all_images[idx]
-            true_label = all_labels[idx]
+        for batch_images, batch_labels in test_data:
+
+            batch_images = batch_images.to(device)
             
-            # Make prediction
-            image_input = image.unsqueeze(0).to(device)
-            logits = model(image_input)
+            start_time = timer()
+            
+            logits = model(batch_images)
             preds = torch.softmax(logits, dim=1)
             pred_label = torch.argmax(preds, dim=1).cpu().item()
             
@@ -92,22 +105,31 @@ def dataset_prediction(
             pred_labels.append(pred_label)
             preds_score.append(preds.max().cpu().item())
 
+            end_time = timer()
+
+            total_time.append(end_time - start_time)
+
+    avg_time = np.mean(total_time)
+    prediction_time = sum(total_time)
+    prediction_time_image_dt = pd.DataFrame(total_time)
+    prediction_time_image_dt.head()
+
+    print(f"Average prediction time per image: {avg_time:.4f} seconds |\nTotal prediction time for {images_num} images: {prediction_time:.4f} seconds")
+
     num_classes = len(classes)
     y_true = torch.tensor(true_labels)
     y_pred = torch.tensor(pred_labels)
 
-    f1 = MulticlassF1Score(num_classes=num_classes, average="macro")(y_pred, y_true)
-    precision = MulticlassPrecision(num_classes=num_classes, average="macro")(y_pred, y_true)
-    recall = MulticlassRecall(num_classes=num_classes, average="macro")(y_pred, y_true)
+    f1 = MulticlassF1Score(num_classes=num_classes, average="micro")(y_pred, y_true)
+    precision = MulticlassPrecision(num_classes=num_classes, average="micro")(y_pred, y_true)
+    recall = MulticlassRecall(num_classes=num_classes, average="micro")(y_pred, y_true)
 
-    print(f"Macro Precision: {precision:.4f}")
-    print(f"Macro Recall:    {recall:.4f}")
-    print(f"Macro F1 Score:  {f1:.4f}")
+    print(f"Precision: {precision:.4f}")
+    print(f"Recall:    {recall:.4f}")
+    print(f"F1 Score:  {f1:.4f}")
     
-    # Plot results (same plotting code as above)
     plt.figure(figsize=(15, 10))
     
-    # Calculate grid dimensions
     if images_num <= 4:
         nrows, ncols = 2, 2
     elif images_num <= 9:
@@ -124,9 +146,9 @@ def dataset_prediction(
         
         image = images[i]
         if image.dim() == 3:
-            if image.shape[0] == 1:  # Grayscale
+            if image.shape[0] == 1:  
                 plt.imshow(image.squeeze(0), cmap='gray')
-            elif image.shape[0] == 3:  # RGB
+            elif image.shape[0] == 3:
                 plt.imshow(image.permute(1, 2, 0))
         else:
             plt.imshow(image, cmap='gray')
@@ -145,6 +167,8 @@ def dataset_prediction(
     
     plt.tight_layout()
     plt.show()
+
+    return prediction_time_image_dt
 
 
 def plot_confusionmatrix(
