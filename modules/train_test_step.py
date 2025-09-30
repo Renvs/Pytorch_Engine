@@ -136,8 +136,10 @@ def train(
             best_loss = current_min_loss
             patience_counter = 0
             best_weights = copy.deepcopy(model.state_dict())
+            save_path = model_path/'best_model.pt'
             print(f'Save best weights with loss: {current_min_loss:.4f}')
-            torch.save(model.state_dict(), f'\nSave best model at {model_path}/best_model.pt')
+            torch.save(model.state_dict(), save_path)
+            print(f'\nSave best model at {model_path}/best_model.pt')
         else:
             patience_counter += 1
             print(f'No improvement. Patience counter: {patience_counter}/{patience}')
