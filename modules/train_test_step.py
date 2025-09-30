@@ -109,7 +109,6 @@ def train(
             train_data=train_data,
             loss_fn=loss_fn,
             optimizer=optimizer,
-            scheduler=scheduler,
             accuracy=accuracy,
             device=device
         )
