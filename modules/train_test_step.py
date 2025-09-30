@@ -9,6 +9,7 @@ from torch import nn, optim
 from torch.utils.tensorboard import SummaryWriter
 from tqdm.auto import tqdm
 from typing import Tuple, List, Dict
+from pathlib import Path
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
@@ -133,18 +134,23 @@ def train(
         current_min_loss = min(result['test_loss'])
 
         if current_min_loss < best_loss:
+
             best_loss = current_min_loss
             patience_counter = 0
             best_weights = copy.deepcopy(model.state_dict())
-            save_path = model_path/'best_model.pt'
+            target_path = Path(model_path)
+            save_path = target_path/'best_model.pt'
             print(f'Save best weights with loss: {current_min_loss:.4f}')
             torch.save(model.state_dict(), save_path)
             print(f'\nSave best model at {model_path}/best_model.pt')
+            
         else:
+
             patience_counter += 1
             print(f'No improvement. Patience counter: {patience_counter}/{patience}')
 
         if patience_counter >= patience:
+
             print(f'Early stopping triggered after {patience} epochs without improvement.')
             break
 
