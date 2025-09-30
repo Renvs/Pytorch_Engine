@@ -3,7 +3,7 @@ import os
 import torchvision
 import torchvision.models as models
 import copy
-import retrieve_data, helper, create_summary, data_loader, train_test_step
+import retrieve_data, helper, create_summary, train_test_step
 
 from torch.utils.tensorboard.writer import SummaryWriter
 from torchinfo import summary
@@ -31,24 +31,26 @@ def fine_tuning(
         # ==== Training Params ====
         loss_fn: nn.Module,
         optimizer_class,
-        scheduler,
-        warmup_scheduler,
         learning_rate:float,
         w_decay:float,
+        dropout: float, 
+        scheduler_type: str, 
+        scheduler_params: Dict,
+        use_warmup: bool,
         accuracy,
         writer: SummaryWriter,
         patience: int,
         device: str = device,
         num_workers: int = NUM_WORKERS,
         epochs: int = 10,
-        warm_epochs: int = 0
-):  
+        warm_epochs: int = None
+) -> Dict[str, List]:  
 
     # ==== Get The Data & Preprocessing The Data ====
 
     print('\n[INFO] Preparing Dataloader\n')
 
-    train_dataloader, test_dataloader, class_names = retrieve_data.get_data(
+    train_dataloader, test_dataloader, class_names = retrieve_data.create_dataloader(
         data_source=data_source,
         batch_size=batch_size,
         image_size=img_size,
@@ -66,36 +68,50 @@ def fine_tuning(
     model = model.to(device)
 
     original_classifier = helper.get_nested_attr(model, classifier_name)
-
     in_features = None
-
     is_conv_layer = False
 
     if isinstance(original_classifier, nn.Linear):
+
         in_features = original_classifier.in_features
 
     elif isinstance(original_classifier, nn.Conv2d):
+
         in_features = original_classifier.in_channels
         is_conv_layer = True
 
     else: 
+
         for layer in reversed(list(original_classifier.modules())):
+
             if isinstance(layer, nn.Linear):
+
                 in_features = layer.in_features
                 break
 
             elif isinstance(layer, nn.Conv2d):
+
                 in_features = layer.in_channels
                 is_conv_layer = True
                 break
 
     if in_features is None:
+
         raise ValueError(f"Could not find Linear layer named '{classifier_name}' in the model")
 
     if is_conv_layer:
-        new_classifier = nn.Conv2d(in_channels=in_features, out_channels=len(class_names), kernel_size=(1, 1), stride=(1, 1))
+
+        new_classifier = nn.Sequential(
+            nn.Conv2d(in_channels=in_features, out_channels=len(class_names), kernel_size=(1, 1), stride=(1, 1)),
+            nn.Dropout2d(p=dropout)
+        )
+
     else:
-        new_classifier = nn.Linear(in_features=in_features, out_features=len(class_names))
+
+        new_classifier = nn.Sequential(
+            nn.Linear(in_features=in_features, out_features=len(class_names)),
+            nn.Dropout(p=dropout)
+        )
 
     helper.set_nested_attr(model, classifier_name, new_classifier)
 
@@ -109,13 +125,25 @@ def fine_tuning(
         weight_decay = w_decay
     )
 
-    main_scheduler = scheduler
-    warmup_scheduler = warmup_scheduler
-    scheduler = optim.lr_scheduler.SequentialLR(
-        optimizer,
-        schedulers=[warmup_scheduler, main_scheduler],
-        milestones=[warm_epochs]
-    )
+    scheduler_params = scheduler_params if scheduler_params else {}
+
+    scheduler_map = {
+        'cosine': optim.lr_scheduler.CosineAnnealingLR,
+        'step': optim.lr_scheduler.StepLR,
+        'plateau': optim.lr_scheduler.ReduceLROnPlateau,
+        'exponential': optim.lr_scheduler.ExponentialLR,
+    }
+
+    main_scheduler = scheduler_map[scheduler_type.lower()](optimizer, **scheduler_params)
+    if use_warmup and warm_epochs is not None:
+        warmup = optim.lr_scheduler.LinearLR(optimizer, start_factor=0.1, total_iters=warm_epochs)
+        scheduler = optim.lr_scheduler.SequentialLR(
+            optimizer,
+            schedulers=[warmup, main_scheduler],
+            milestones=[warm_epochs]
+        )
+    else:
+        scheduler = main_scheduler
 
     # ==== Dummy Pass The Model
 
@@ -133,21 +161,22 @@ def fine_tuning(
         
     # ==== Train The Model ====
 
-    result = train_test_step.summary_writer_addon(
+    result = train_test_step.train(
         model=model, 
         model_name=model_name, 
         model_path=save_path,
+
         train_data=train_dataloader,
         test_data=test_dataloader,
+        image_size=img_size[0],
+        batch_size=batch_size,
+        epochs=epochs,
+
         loss_fn=loss_fn,
         optimizer=optimizer,
         scheduler=scheduler,
         accuracy=accuracy,
-        epochs=epochs,
-        batch_size=batch_size,
-        image_size=img_size[0],
         writer=writer,
-        n_class=class_names,
         device=device,
         patience=patience
     )
@@ -172,10 +201,12 @@ def feature_extraction(
         # ==== Training Params ====
         loss_fn: nn.Module,
         optimizer_class,
-        scheduler,
-        warmup_scheduler,
         learning_rate:float,
         w_decay:float,
+        dropout: float,
+        scheduler_type: str,
+        scheduler_params: Dict,
+        use_warmup: bool,
         accuracy,
         writer: SummaryWriter,
         patience: int,
@@ -189,7 +220,7 @@ def feature_extraction(
 
     print('\n[INFO] Preparing Dataloader\n')
 
-    train_dataloader, test_dataloader, class_names = retrieve_data.get_data(
+    train_dataloader, test_dataloader, class_names = retrieve_data.create_dataloader(
         data_source=data_source,
         batch_size=batch_size,
         image_size=img_size,
@@ -216,43 +247,72 @@ def feature_extraction(
     is_conv_layer = False
 
     if isinstance(original_classifier, nn.Linear):
+
         in_features = original_classifier.in_features
 
     elif isinstance(original_classifier, nn.Conv2d):
+
         in_features = original_classifier.in_channels
         is_conv_layer = True
 
     else: 
+
         for layer in reversed(list(original_classifier.modules())):
+
             if isinstance(layer, nn.Linear):
+
                 in_features = layer.in_features
                 break
 
             elif isinstance(layer, nn.Conv2d):
+
                 in_features = layer.in_channels
                 is_conv_layer = True
                 break
 
     if in_features is None:
+
         raise ValueError(f"Could not find Linear layer named '{classifier_name}' in the model")
 
     if is_conv_layer:
-        new_classifier = nn.Conv2d(in_channels=in_features, out_channels=len(class_names), kernel_size=(1, 1), stride=(1, 1))
+
+        new_classifier = nn.Sequential(
+            nn.Conv2d(in_channels=in_features, out_channels=len(class_names), kernel_size=(1, 1), stride=(1, 1)),
+            nn.Dropout2d(p=dropout)
+        )
+
     else:
-        new_classifier = nn.Linear(in_features=in_features, out_features=len(class_names))
+
+        new_classifier = nn.Sequential(
+            nn.Linear(in_features=in_features, out_features=len(class_names)),
+            nn.Dropout(p=dropout)
+        )
 
     helper.set_nested_attr(model, classifier_name, new_classifier)
 
     new_params = [p for p in model.parameters() if p.requires_grad]
     optimizer = optimizer_class(params=new_params, lr=learning_rate, weight_decay=w_decay)
 
-    main_scheduler = scheduler
-    warmup_scheduler = warmup_scheduler
-    scheduler = optim.lr_scheduler.SequentialLR(
-        optimizer,
-        schedulers=[warmup_scheduler, main_scheduler],
-        milestones=[warm_epochs]
-    )
+    scheduler_params = scheduler_params if scheduler_params else {}
+
+    scheduler_map = {
+        'cosine': optim.lr_scheduler.CosineAnnealingLR,
+        'step': optim.lr_scheduler.StepLR,
+        'plateau': optim.lr_scheduler.ReduceLROnPlateau,
+        'exponential': optim.lr_scheduler.ExponentialLR,
+    }
+
+    main_scheduler = scheduler_map[scheduler_type.lower()](optimizer, **scheduler_params)
+
+    if use_warmup and warm_epochs is not None:
+        warmup = optim.lr_scheduler.LinearLR(optimizer, start_factor=0.1, total_iters=warm_epochs)
+        scheduler = optim.lr_scheduler.SequentialLR(
+            optimizer,
+            schedulers=[warmup, main_scheduler],
+            milestones=[warm_epochs]
+        )
+    else:
+        scheduler = main_scheduler
 
     # ==== Dummy Pass The Model
 
@@ -270,21 +330,22 @@ def feature_extraction(
         
     # ==== Train The Model ====
 
-    result = train_test_step.summary_writer_addon(
+    result = train_test_step.train(
         model=model, 
         model_name=model_name, 
         model_path=save_path,
+
         train_data=train_dataloader,
         test_data=test_dataloader,
+        image_size=img_size[0],
+        batch_size=batch_size,
+        epochs=epochs,
+
         loss_fn=loss_fn,
         optimizer=optimizer,
         scheduler=scheduler,
         accuracy=accuracy,
-        epochs=epochs,
-        batch_size=batch_size,
-        image_size=img_size[0],
         writer=writer,
-        n_class=class_names,
         device=device,
         patience=patience
     )
@@ -368,10 +429,10 @@ def multiple_tracking(
                     best_weights = copy.deepcopy(model.state_dict())
                     print(f'Save best weights with loss: {current_min_loss:.4f}')
 
-            data_loader.save_models(model, save_path, model_name)
+            retrieve_data.save_models(model, save_path, model_name)
 
     if best_weights is not None:
-        data_loader.save_models(model, save_path, 'best_model.pt')
+        retrieve_data.save_models(model, save_path, 'best_model.pt')
     else:
         print('No model to save')
 
