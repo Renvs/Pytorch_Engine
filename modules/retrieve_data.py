@@ -125,7 +125,6 @@ def create_dataloader(
         train_dir, test_dir = get_data(
             url=data_source,
             data_path=data_path,
-            save_path=save_path,
             filename=filename
         )
 
