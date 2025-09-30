@@ -2,7 +2,7 @@ import torch
 import tqdm
 import copy
 import create_summary 
-import data_loader
+import retrieve_data 
 
 from timeit import default_timer as timer
 from torch import nn, optim
@@ -166,7 +166,7 @@ def train(
 
     if best_weights is not None:
         model.load_state_dict(best_weights)
-        data_loader.save_models(model, model_path, model_name)
+        retrieve_data.save_models(model, model_path, model_name)
         
     model.eval()
 
