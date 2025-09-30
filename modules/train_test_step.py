@@ -121,7 +121,7 @@ def train(
             device=device
         )
 
-        scheduler.step()
+        scheduler.step(test_loss)
         
         print(f"Train loss: {train_loss:.4f} | Train accuracy: {train_acc * 100:.3f}% |\nTest loss: {test_loss:.4f} | Test accuracy: {test_acc * 100:.3f}%\n")
 
