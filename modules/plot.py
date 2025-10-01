@@ -79,7 +79,10 @@ def dataset_prediction(
     with torch.inference_mode():
         for batch_images, batch_labels in test_data:
 
-            batch_images = batch_images.to(device)
+            if device =='cuda' and torch.cuda.is_available():
+                batch_images = batch_images.to(device)
+            else:
+                batch_images = batch_images.to('cpu')
             
             start_time = timer()
             
@@ -116,9 +119,9 @@ def dataset_prediction(
 
     avg_time = np.mean(total_time)
     prediction_time = np.sum(total_time)
-    prediction_time_image_dt = pd.DataFrame(total_time, columns=['Prediction Time'])
+    prediction_time_image_dt = pd.DataFrame(total_time, columns=[f'Prediction Time Using {device}'])
 
-    print(f"Average prediction time per image: {avg_time:.4f} seconds |\nTotal prediction time for {images_num} images: {prediction_time:.4f} seconds")
+    print(f"Average prediction time per image: {avg_time:.4f} seconds |\nTotal prediction time for {images_num} images: {prediction_time:.4f} seconds using {device}")
 
     num_classes = len(classes)
     y_true = torch.tensor(true_labels)
