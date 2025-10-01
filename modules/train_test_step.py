@@ -138,9 +138,8 @@ def train(
             best_loss = current_min_loss
             patience_counter = 0
             best_weights = copy.deepcopy(model.state_dict())
-            print(f'Save best weights with loss: {current_min_loss:.4f}')
             retrieve_data.save_models(model, model_path, 'best_model')
-            print(f'\nSave best model at {model_path}/best_model.pt')
+            print(f'Save best weights with loss: {current_min_loss:.4f}\n')
             
         else:
 

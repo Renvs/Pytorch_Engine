@@ -72,6 +72,9 @@ def dataset_prediction(
     model.eval()
 
     images_counter = 0
+
+    mean = torch.tensor([0.485, 0.456, 0.406]).view(3, 1, 1)
+    std = torch.tensor([0.229, 0.224, 0.225]).view(3, 1, 1)
     
     with torch.inference_mode():
         for batch_images, batch_labels in test_data:
@@ -89,21 +92,24 @@ def dataset_prediction(
             batch_time = end_time - start_time
             avg_image_time = batch_time / batch_images.size(0)
 
+            batch_images = batch_images.cpu()
+
             for i in range(batch_images.size(0)):
                 if images_counter >= images_num:
                     break
                 
-                images.append(batch_images[i].cpu())
+                images.append(batch_images[i])
                 true_labels.append(batch_labels[i].item())
                 pred_labels.append(pred_label_batch[i].item())
                 preds_score.append(pred_scores_batch[i].item())
                 total_time.append(avg_image_time)
 
                 images_counter += 1
-
+            
             if images_counter >= images_num:
                 break
 
+            
     if images_counter < images_num:
         print(f"Warning: Only {images_counter} images were found in the dataset. Requested {images_num}.")
         images_num = images_counter
@@ -143,11 +149,17 @@ def dataset_prediction(
         plt.subplot(nrows, ncols, i+1)
         
         image = images[i]
-        if image.dim() == 3:
-            if image.shape[0] == 1:  
-                plt.imshow(image.squeeze(0), cmap='gray')
-            elif image.shape[0] == 3:
-                plt.imshow(image.permute(1, 2, 0))
+
+        if image.dim() == 3 and image.shape[0] == 3:
+
+            image = image * std + mean
+            image = torch.clamp(image, 0, 1)  
+            plt.imshow(image.permute(1, 2, 0))
+
+        elif image.dim() == 3 and image.shape[0] == 1:
+
+            plt.imshow(image.squeeze(0), cmap='gray')
+            
         else:
             plt.imshow(image, cmap='gray')
         

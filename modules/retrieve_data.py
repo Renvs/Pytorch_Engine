@@ -53,7 +53,6 @@ def get_data(url: str, data_path: str, filename: str = None):
 def save_models(model: nn.Module, save_path: str, model_name: str):
     try:
         if save_path:
-                print(f'[INFO] Created Directory at {save_path}')
                 target_path = Path(save_path)
                 target_path.mkdir(parents=True, exist_ok=True)
         else:
