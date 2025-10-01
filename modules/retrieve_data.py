@@ -64,7 +64,7 @@ def save_models(model: nn.Module, save_path: str, model_name: str):
         torch.save(model.state_dict(), model_path)
         print(f'[INFO] Model saved at {model_path} / {model_name}.pt')
 
-    except Exception as e:        
+    except Exception as e:          
         print(f"[ERROR] Failed to save model: {e}")
 
 def dataloader_from_zip(
