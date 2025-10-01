@@ -159,7 +159,7 @@ def dataset_prediction(
         elif image.dim() == 3 and image.shape[0] == 1:
 
             plt.imshow(image.squeeze(0), cmap='gray')
-            
+
         else:
             plt.imshow(image, cmap='gray')
         
@@ -327,4 +327,3 @@ def plot_loss_curves(results: Dict[str, List[float]], model_name: str):
 
     plt.tight_layout(rect=[0, 0.03, 1, 0.95])
     plt.show()
-

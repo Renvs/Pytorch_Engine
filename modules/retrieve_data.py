@@ -175,8 +175,8 @@ def create_dataloader(
 
         if train_dataset and test_dataset:
 
-            train_dataloader = DataLoader(train_dataset, {**dataloader_params, 'shuffle': True})
-            test_dataloader = DataLoader(test_dataset, {**dataloader_params, 'shuffle': False})
+            train_dataloader = DataLoader(train_dataset, **{**dataloader_params, 'shuffle': True})
+            test_dataloader = DataLoader(test_dataset, **{**dataloader_params, 'shuffle': False})
 
         return train_dataloader, test_dataloader, n_classes
     else:
