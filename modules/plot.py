@@ -54,6 +54,20 @@ def images_prediction(
     plt.title(f"Predicted: {classes[label]} | Probability: {preds.max().cpu().item():.3f}")
     plt.axis('off')
 
+    probs_df = pd.DataFrame({
+        'Class': classes,
+        'Probability': preds.cpu().squeeze().numpy()
+    })
+    probs_df_sorted = probs_df.sort_values(by='Probability', ascending=True)
+
+    plt.figure(figsize=(8, 6))
+    plt.barh(probs_df_sorted['Class'], probs_df_sorted['Probability'])
+    plt.xlabel('Probability')
+    plt.ylabel('Class')
+    plt.title('Prediction')
+    
+    plt.show()
+    
 def dataset_prediction(
     model: nn.Module,
     test_data: torch.utils.data.DataLoader,
